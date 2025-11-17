@@ -61,3 +61,12 @@ logs/
 
 # Reference repositories
 Flycut/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+*.cover
+.hypothesis/
