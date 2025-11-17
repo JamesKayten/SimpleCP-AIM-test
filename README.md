@@ -32,8 +32,8 @@ A lightweight macOS menu bar clipboard manager with snippet folders, built becau
 ### Setup
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd clipboard_manager
+git clone https://github.com/JamesKayten/SimpleCP.git
+cd SimpleCP
 
 # Install dependencies
 pip3 install rumps pyperclip
