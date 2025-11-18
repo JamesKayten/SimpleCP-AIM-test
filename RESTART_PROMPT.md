@@ -4,7 +4,7 @@ Copy and paste this exactly when starting your next session:
 
 ---
 
-**Ready to continue framework testing. Read docs/ai_communication/SESSION_HANDOFF_2025-11-18.md and pick up where we left off.**
+**Ready to continue framework testing**
 
 ---
 
