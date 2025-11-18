@@ -1,16 +1,12 @@
-# SimpleCP - UI/UX Specification v3 (Header + Two-Column Layout)
+# SimpleCP - UI/UX Specification v3 (Menu Bar Dropdown Layout)
 
-This document defines the **modern header-based interface** for SimpleCP, inspired by elegant clipboard managers like Clip-It.
+This document defines the **menu bar dropdown interface** for SimpleCP - a compact, efficient clipboard manager that lives in the macOS menu bar.
 
-## Window Design Overview
+## Menu Bar Dropdown Design Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ SimpleCP                                     🔍 [⚙️] [ X ]│ ← Header Bar
-├─────────────────────────────────────────────────────────────┤
-│ 🔍 Search clips and snippets...                           │ ← Search Bar
-├─────────────────────────────────────────────────────────────┤
-│ ➕ Create Folder    📁 Manage Folders    📋 Clear History   │ ← Control Bar
+│ 🔍 Search clips and snippets...    ➕📁📋 [⚙️]           │ ← Combined Search/Control Bar
 ├─────────────────────┬───────────────────────────────────────┤
 │ 📋 RECENT CLIPS     │ 📁 SAVED SNIPPETS                   │
 │                     │                                       │
@@ -32,34 +28,29 @@ This document defines the **modern header-based interface** for SimpleCP, inspir
 └─────────────────────┴───────────────────────────────────────┘
 ```
 
-## Header Bar Design
+## Combined Search/Control Bar Design
 
-### Window Header
-- **Title**: "SimpleCP" (left-aligned)
-- **Search Icon**: 🔍 (for global search, right side)
-- **Settings Icon**: ⚙️ (gear icon, top right)
-- **Close Button**: Standard macOS window controls
+### Menu Bar Dropdown Interface
+- **Menu bar icon**: Clipboard icon (📋) in macOS menu bar
+- **Dropdown size**: 600x400 points
+- **Style**: MenuBarExtra with window style for rich content
 
-### Search Bar (Always Visible)
-- **Placeholder**: "Search clips and snippets..."
+### Combined Search/Control Bar (Single Bar)
+- **Search field**: "Search clips and snippets..." with magnifying glass icon
+- **Control buttons**: ➕ Create Folder, 📁 Manage Folders, 📋 Clear History (compact icons)
+- **Settings**: ⚙️ (gear icon, right side)
 - **Real-time filtering**: Updates both columns as user types
 - **Search scope**: Searches both recent clips and saved snippets
-- **Clear button**: ✖ appears when text is entered
-
-### Control Bar (Streamlined Snippet Workflow)
+#### Control Bar Button Layout:
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ 💾 Save as Snippet    📁 Manage Folders    📋 Clear History │
-│                                           📤 Export  📥 Import │
-└─────────────────────────────────────────────────────────────┘
+🔍 [Search field.....................] ➕ 📁 📋 ⚙️
 ```
 
-#### Control Bar Buttons:
-- **💾 Save as Snippet**: Complete snippet creation workflow (saves current clipboard)
-- **📁 Manage Folders**: Dropdown with folder operations
-- **📋 Clear History**: Clear all clipboard history
-- **📤 Export**: Export snippets to file
-- **📥 Import**: Import snippets from file
+#### Control Buttons (Compact Icons):
+- **➕**: Create new snippet folder
+- **📁**: Manage existing folders
+- **📋**: Clear all clipboard history
+- **⚙️**: Settings panel
 
 ### Manage Folders Dropdown
 ```
@@ -297,66 +288,97 @@ Background: [#F7FAFC] Text: [#2D3748]
 ☐ Show snippet previews on hover
 ```
 
-## Technical Implementation Updates
+## Technical Implementation - SwiftUI MenuBarExtra
 
-### New Class Structure
-```python
-class SimpleCP(rumps.App):
-    def __init__(self):
-        super().__init__("📋")
-        self.main_window = None
-
-    @rumps.clicked("Open SimpleCP")
-    def show_main_window(self, _):
-        if not self.main_window:
-            self.main_window = MainWindow()
-        self.main_window.show()
-
-class MainWindow(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.setup_window()
-        self.create_header()
-        self.create_search_bar()
-        self.create_control_bar()
-        self.create_two_columns()
-
-    def create_header(self):
-        # Window header with title, search icon, settings icon
-        pass
-
-    def create_search_bar(self):
-        # Always-visible search with real-time filtering
-        pass
-
-    def create_control_bar(self):
-        # Snippet management buttons
-        pass
+### App Structure
+```swift
+@main
+struct SimpleCPApp: App {
+    var body: some Scene {
+        MenuBarExtra("SimpleCP", systemImage: "clipboard") {
+            ContentView()
+                .frame(width: 600, height: 400)
+        }
+        .menuBarExtraStyle(.window)
+    }
+}
 ```
 
-### Header Manager
-```python
-class HeaderManager:
-    def __init__(self, parent_window):
-        self.window = parent_window
-        self.search_var = tk.StringVar()
+### Main Content View
+```swift
+struct ContentView: View {
+    @StateObject private var clipboardService = ClipboardService()
+    @State private var searchText = ""
 
-    def create_header_bar(self):
-        # Title, search icon, settings gear
-        pass
+    var body: some View {
+        VStack(spacing: 0) {
+            // Combined Search/Control Bar
+            SearchControlBar(searchText: $searchText)
+                .environmentObject(clipboardService)
 
-    def create_search_bar(self):
-        # Real-time search with filtering
-        self.search_var.trace('w', self.on_search_change)
+            Divider()
 
-    def on_search_change(self, *args):
-        # Filter both columns based on search
-        search_term = self.search_var.get()
-        self.window.filter_content(search_term)
+            // Two-Column Content
+            HStack(spacing: 0) {
+                RecentClipsColumn()
+                    .frame(maxWidth: .infinity)
+                Divider()
+                SavedSnippetsColumn()
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .environmentObject(clipboardService)
+    }
+}
+```
 
-    def show_settings(self):
-        # Open settings window
-        pass
+### Combined Search/Control Bar
+```swift
+struct SearchControlBar: View {
+    @Binding var searchText: String
+    @EnvironmentObject var clipboardService: ClipboardService
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Search field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search clips and snippets...", text: $searchText)
+                    .textFieldStyle(.plain)
+            }
+            .padding(8)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(6)
+
+            // Compact control buttons
+            Button(action: createFolder) {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            Button(action: manageFolders) {
+                Image(systemName: "folder")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            Button(action: clearHistory) {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            Button(action: showSettings) {
+                Image(systemName: "gear")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(12)
+    }
+}
 ```
 
 ### Snippet Workflow Manager
