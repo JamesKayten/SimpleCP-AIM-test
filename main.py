@@ -13,7 +13,7 @@ import os
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
-from clipboard_manager import ClipboardManager
+from clipboard_manager import ClipboardManager  # noqa: E402
 
 
 def main():

@@ -8,7 +8,6 @@ No UI code - designed to be consumed by REST API and future Swift frontend.
 import pyperclip
 import json
 import os
-from datetime import datetime
 from typing import Optional, List, Dict, Any
 from stores.clipboard_item import ClipboardItem
 from stores.history_store import HistoryStore
@@ -19,14 +18,7 @@ class ClipboardManager:
     """
     Core clipboard manager backend.
     Based on Flycut's FlycutOperator pattern with multi-store architecture.
-
-    Features:
-    - Multi-store management (history, snippets)
-    - Background clipboard monitoring
-    - Snippet workflow methods
-    - Persistence management
-    - Search across all stores
-    - API-ready methods
+    Provides multi-store management, clipboard monitoring, persistence, and search.
     """
 
     def __init__(
@@ -190,12 +182,14 @@ class ClipboardManager:
         if result and self.auto_save_enabled:
             self.save_stores()
         return result
+
     def move_snippet(self, from_folder: str, to_folder: str, clip_id: str) -> bool:
         """Move snippet between folders."""
         result = self.snippet_store.move_snippet(from_folder, to_folder, clip_id)
         if result and self.auto_save_enabled:
             self.save_stores()
         return result
+
     # Search operations
     def search_all(self, query: str) -> Dict[str, List[ClipboardItem]]:
         """Search across history and snippets."""
@@ -203,6 +197,7 @@ class ClipboardManager:
             "history": self.history_store.search(query),
             "snippets": self.snippet_store.search(query),
         }
+
     # Persistence operations
     def save_stores(self):
         """Save all stores to disk."""
@@ -220,6 +215,7 @@ class ClipboardManager:
             self.snippet_store.modified = False
         except Exception as e:
             print(f"Error saving stores: {e}")
+
     def load_stores(self):
         """Load all stores from disk."""
         try:

@@ -4,9 +4,8 @@ API models for SimpleCP REST API.
 Pydantic models for request/response validation.
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional, List, Any
 
 
 class ClipboardItemResponse(BaseModel):

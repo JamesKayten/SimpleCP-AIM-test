@@ -18,7 +18,6 @@ from api.models import (
     SearchResponse,
     StatsResponse,
     SnippetFolderResponse,
-    ErrorResponse,
     SuccessResponse,
     clipboard_item_to_response,
 )

@@ -5,7 +5,7 @@ Manages organized snippet folders for reusable text clips.
 Based on Flycut's favorites store pattern with folder organization.
 """
 
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable
 from stores.clipboard_item import ClipboardItem
 
 
