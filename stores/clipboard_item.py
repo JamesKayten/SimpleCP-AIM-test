@@ -196,8 +196,14 @@ class ClipboardItem:
 
     def __repr__(self) -> str:
         if self.has_name:
-            return f"ClipboardItem(snippet='{self.snippet_name}', folder='{self.folder_path}')"
-        return f"ClipboardItem(display='{self.display_string[:30]}...', type='{self.content_type}')"
+            return (
+                f"ClipboardItem(snippet='{self.snippet_name}', "
+                f"folder='{self.folder_path}')"
+            )
+        return (
+            f"ClipboardItem(display='{self.display_string[:30]}...', "
+            f"type='{self.content_type}')"
+        )
 
     def __eq__(self, other) -> bool:
         """Check equality based on content."""

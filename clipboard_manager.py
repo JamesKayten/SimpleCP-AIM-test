@@ -8,7 +8,6 @@ No UI code - designed to be consumed by REST API and future Swift frontend.
 import pyperclip
 import json
 import os
-from datetime import datetime
 from typing import Optional, List, Dict, Any
 from stores.clipboard_item import ClipboardItem
 from stores.history_store import HistoryStore
@@ -19,14 +18,7 @@ class ClipboardManager:
     """
     Core clipboard manager backend.
     Based on Flycut's FlycutOperator pattern with multi-store architecture.
-
-    Features:
-    - Multi-store management (history, snippets)
-    - Background clipboard monitoring
-    - Snippet workflow methods
-    - Persistence management
-    - Search across all stores
-    - API-ready methods
+    Provides multi-store management, clipboard monitoring, persistence, and search.
     """
 
     def __init__(
@@ -41,9 +33,7 @@ class ClipboardManager:
         )
         self.snippet_store = SnippetStore()
         self._current_clipboard = ""
-        self.data_dir = data_dir or os.path.join(
-            os.path.dirname(__file__), "data"
-        )
+        self.data_dir = data_dir or os.path.join(os.path.dirname(__file__), "data")
         os.makedirs(self.data_dir, exist_ok=True)
         self.history_file = os.path.join(self.data_dir, "history.json")
         self.snippets_file = os.path.join(self.data_dir, "snippets.json")
@@ -61,9 +51,7 @@ class ClipboardManager:
             print(f"Error checking clipboard: {e}")
         return None
 
-    def add_clip(
-        self, content: str, source_app: Optional[str] = None
-    ) -> ClipboardItem:
+    def add_clip(self, content: str, source_app: Optional[str] = None) -> ClipboardItem:
         """Add clipboard item to history with automatic deduplication."""
         clip = ClipboardItem(content=content, source_app=source_app)
         self.history_store.insert(clip)
@@ -86,11 +74,7 @@ class ClipboardManager:
         return False
 
     def save_as_snippet(
-        self,
-        clip_id: str,
-        name: str,
-        folder: str,
-        tags: Optional[List[str]] = None,
+        self, clip_id: str, name: str, folder: str, tags: Optional[List[str]] = None
     ) -> Optional[ClipboardItem]:
         """Convert history item to snippet."""
         for item in self.history_store.items:
@@ -107,9 +91,7 @@ class ClipboardManager:
         """Get recent history items."""
         return self.history_store.get_recent_items()
 
-    def get_all_history(
-        self, limit: Optional[int] = None
-    ) -> List[ClipboardItem]:
+    def get_all_history(self, limit: Optional[int] = None) -> List[ClipboardItem]:
         """Get all history items."""
         return self.history_store.get_items(limit)
 
@@ -168,11 +150,7 @@ class ClipboardManager:
         return self.snippet_store.get_all_snippets()
 
     def add_snippet_direct(
-        self,
-        content: str,
-        name: str,
-        folder: str,
-        tags: Optional[List[str]] = None,
+        self, content: str, name: str, folder: str, tags: Optional[List[str]] = None
     ) -> ClipboardItem:
         """Create and add snippet directly."""
         snippet = ClipboardItem(content=content)
@@ -205,13 +183,9 @@ class ClipboardManager:
             self.save_stores()
         return result
 
-    def move_snippet(
-        self, from_folder: str, to_folder: str, clip_id: str
-    ) -> bool:
+    def move_snippet(self, from_folder: str, to_folder: str, clip_id: str) -> bool:
         """Move snippet between folders."""
-        result = self.snippet_store.move_snippet(
-            from_folder, to_folder, clip_id
-        )
+        result = self.snippet_store.move_snippet(from_folder, to_folder, clip_id)
         if result and self.auto_save_enabled:
             self.save_stores()
         return result
@@ -228,9 +202,7 @@ class ClipboardManager:
     def save_stores(self):
         """Save all stores to disk."""
         try:
-            history_data = [
-                item.to_dict() for item in self.history_store.items
-            ]
+            history_data = [item.to_dict() for item in self.history_store.items]
             with open(self.history_file, "w") as f:
                 json.dump(history_data, f, indent=2)
             snippet_data = {
@@ -258,8 +230,7 @@ class ClipboardManager:
                     data = json.load(f)
                 for folder_name, items_data in data.items():
                     self.snippet_store.folders[folder_name] = [
-                        ClipboardItem.from_dict(item_data)
-                        for item_data in items_data
+                        ClipboardItem.from_dict(item_data) for item_data in items_data
                     ]
         except Exception as e:
             print(f"Error loading stores: {e}")
