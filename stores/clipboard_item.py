@@ -63,18 +63,39 @@ class ClipboardItem:
         self.tags: List[str] = []
 
     def _detect_content_type(self) -> str:
-        """Detect content type based on patterns."""
+        """Detect content type with enhanced auto-categorization."""
         content = self.content.strip()
 
-        # URL detection
-        if re.match(r"^https?://", content):
+        # URL detection (enhanced)
+        if re.match(r"^https?://", content) or re.match(r"^www\.", content):
             return "url"
 
-        # Email detection
+        # Email detection (enhanced)
         if re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", content):
             return "email"
 
-        # Code detection (simple heuristics)
+        # JSON detection
+        if (content.startswith("{") and content.endswith("}")) or (
+            content.startswith("[") and content.endswith("]")
+        ):
+            try:
+                import json
+
+                json.loads(content)
+                return "json"
+            except Exception:
+                pass
+
+        # SQL detection
+        sql_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP"]
+        if any(kw in content.upper() for kw in sql_keywords):
+            return "sql"
+
+        # Shell command detection
+        if content.startswith("$") or content.startswith("sudo "):
+            return "shell"
+
+        # Code detection (enhanced heuristics)
         code_indicators = [
             "def ",
             "class ",
@@ -83,9 +104,21 @@ class ClipboardItem:
             "const ",
             "var ",
             "let ",
+            "<?php",
+            "public ",
+            "private ",
+            "return ",
         ]
         if any(indicator in content for indicator in code_indicators):
             return "code"
+
+        # Numeric/calculation detection
+        if re.match(r"^\d+(\.\d+)?$", content):
+            return "number"
+
+        # Path detection (file/directory paths)
+        if "/" in content and not " " in content:
+            return "path"
 
         return "text"
 

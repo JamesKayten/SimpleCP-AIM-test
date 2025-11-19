@@ -23,8 +23,7 @@ class ClipboardItemResponse(BaseModel):
     folder_path: Optional[str] = None
     tags: List[str] = []
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class HistoryFolderResponse(BaseModel):
@@ -114,6 +113,39 @@ class SuccessResponse(BaseModel):
 
     success: bool
     message: Optional[str] = None
+
+
+class StatusResponse(BaseModel):
+    """Response for monitoring status."""
+
+    monitoring: bool
+    history_count: int
+    snippet_count: int
+    uptime_seconds: Optional[float] = None
+
+
+class ExportData(BaseModel):
+    """Export data format."""
+
+    version: str
+    export_date: str
+    snippets: List[Dict[str, Any]]
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class ImportRequest(BaseModel):
+    """Import request format."""
+
+    version: str
+    snippets: List[Dict[str, Any]]
+
+
+class SearchRequest(BaseModel):
+    """Search request model."""
+
+    query: str
+    include_history: bool = True
+    include_snippets: bool = True
 
 
 def clipboard_item_to_response(item: Any) -> ClipboardItemResponse:

@@ -243,3 +243,39 @@ class ClipboardManager:
             "folder_count": len(self.snippet_store.folders),
             "max_history": self.history_store.max_items,
         }
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get monitoring status."""
+        return {
+            "monitoring": True,
+            "history_count": len(self.history_store),
+            "snippet_count": len(self.snippet_store),
+        }
+
+    def export_snippets(self) -> Dict[str, Any]:
+        """Export all snippets."""
+        all_snippets = []
+        for folder, items in self.snippet_store.folders.items():
+            for item in items:
+                all_snippets.append(item.to_dict())
+        return {
+            "version": "1.0",
+            "export_date": datetime.now().isoformat(),
+            "snippets": all_snippets,
+            "metadata": {"folder_count": len(self.snippet_store.folders)},
+        }
+
+    def import_snippets(self, import_data: Dict[str, Any]) -> bool:
+        """Import snippets from export data."""
+        try:
+            snippets = import_data.get("snippets", [])
+            for snippet_data in snippets:
+                item = ClipboardItem.from_dict(snippet_data)
+                folder = item.folder_path or "Imported"
+                self.snippet_store.add_snippet(folder, item)
+            if self.auto_save_enabled:
+                self.save_stores()
+            return True
+        except Exception as e:
+            print(f"Error importing snippets: {e}")
+            return False
