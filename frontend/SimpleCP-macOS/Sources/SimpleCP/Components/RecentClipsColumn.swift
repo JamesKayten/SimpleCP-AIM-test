@@ -44,8 +44,8 @@ struct RecentClipsColumn: View {
 
             Divider()
 
-            // Clips List
-            ScrollView {
+            // Clips List - Optimized for mouse wheel scrolling
+            ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(alignment: .leading, spacing: 1) {
                     // Recent 10 clips
                     ForEach(Array(recentClips.enumerated()), id: \.element.id) { index, clip in

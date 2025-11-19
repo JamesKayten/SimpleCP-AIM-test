@@ -46,8 +46,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showSaveSnippetDialog) {
             SaveSnippetDialog(
-                content: selectedClipForSave?.content ?? clipboardManager.currentClipboard,
-                isPresented: $showSaveSnippetDialog
+                isPresented: $showSaveSnippetDialog,
+                content: selectedClipForSave?.content ?? clipboardManager.currentClipboard
             )
             .environmentObject(clipboardManager)
         }
@@ -142,6 +142,15 @@ struct ContentView: View {
             }
             .buttonStyle(.bordered)
             .help("Save current clipboard as snippet")
+
+            Button(action: {
+                createNewFolder()
+            }) {
+                Label("New Folder", systemImage: "folder.badge.plus")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .help("Create new snippet folder")
 
             Menu {
                 Button("Create Folder...") {

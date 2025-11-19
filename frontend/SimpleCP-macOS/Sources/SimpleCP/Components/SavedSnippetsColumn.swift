@@ -44,8 +44,8 @@ struct SavedSnippetsColumn: View {
 
             Divider()
 
-            // Folders List
-            ScrollView {
+            // Folders List - Optimized for mouse wheel scrolling
+            ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(sortedFolders) { folder in
                         FolderView(
