@@ -51,6 +51,23 @@ struct ContentView: View {
             )
             .environmentObject(clipboardManager)
         }
+        // Error alert for clipboard manager errors
+        .alert("Error", isPresented: $clipboardManager.showError, presenting: clipboardManager.lastError) { error in
+            Button("OK", role: .cancel) {
+                clipboardManager.lastError = nil
+            }
+        } message: { error in
+            VStack(alignment: .leading, spacing: 8) {
+                if let description = error.errorDescription {
+                    Text(description)
+                }
+                if let recovery = error.recoverySuggestion {
+                    Text("\n\(recovery)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
 
     // MARK: - Header Bar
