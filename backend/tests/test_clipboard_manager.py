@@ -1,4 +1,5 @@
 """Tests for clipboard manager core functionality."""
+
 import pytest
 import tempfile
 import shutil

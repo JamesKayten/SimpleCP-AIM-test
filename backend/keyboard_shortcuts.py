@@ -6,7 +6,6 @@ Platform-specific implementations for macOS, Linux, and Windows.
 """
 
 import sys
-import os
 from typing import Optional, Callable, Dict
 
 

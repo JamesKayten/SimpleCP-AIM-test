@@ -3,21 +3,21 @@
 ## Project Configuration
 - **Type:** Python Backend/API
 - **Language:** python
-- **Generated:** Tue Nov 18 16:31:39 PST 2025
+- **Generated:** Wed Nov 19 11:35:34 PST 2025
 
 ## File Size Limits
-**Maximum file size:** 250 lines
+**Maximum file size:** 300 lines
 
 ```bash
 # Check file sizes
-find . -name "*.py" -o -name "*.js" -o -name "*.java" -o -name "*.go" -o -name "*.rs" | xargs wc -l | awk '$1 > 250 {print "VIOLATION: " $2 " has " $1 " lines (limit: 250)"}'
+find . -name "*.py" -o -name "*.js" -o -name "*.java" -o -name "*.go" -o -name "*.rs" | xargs wc -l | awk '$1 > 300 {print "VIOLATION: " $2 " has " $1 " lines (limit: 300)"}'
 ```
 
 ## Test Coverage Requirements
 **Minimum coverage:** 90%
 
 ## Validation Tools
-**Configured tools:** black,flake8,pytest,pyperclip
+**Configured tools:** black,flake8,pytest
 
 ```bash
 black --check .

@@ -117,7 +117,7 @@ class ClipboardItem:
             return "number"
 
         # Path detection (file/directory paths)
-        if "/" in content and not " " in content:
+        if "/" in content and " " not in content:
             return "path"
 
         return "text"

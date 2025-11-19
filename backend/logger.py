@@ -10,7 +10,6 @@ import logging.handlers
 import os
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 
 
 class SimpleCPLogger:
@@ -41,9 +40,7 @@ class SimpleCPLogger:
             max_file_size: Maximum size of each log file before rotation
             backup_count: Number of backup log files to keep
         """
-        self.log_dir = log_dir or os.path.join(
-            os.path.dirname(__file__), "logs"
-        )
+        self.log_dir = log_dir or os.path.join(os.path.dirname(__file__), "logs")
         Path(self.log_dir).mkdir(parents=True, exist_ok=True)
 
         self.log_level = getattr(logging, log_level.upper(), logging.INFO)
@@ -72,10 +69,11 @@ class SimpleCPLogger:
         )
         file_handler.setLevel(self.log_level)
 
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+        format_str = (
+            "%(asctime)s - %(name)s - %(levelname)s - "
+            "%(module)s:%(lineno)d - %(message)s"
         )
+        formatter = logging.Formatter(format_str, datefmt="%Y-%m-%d %H:%M:%S")
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
 
@@ -145,9 +143,7 @@ class SimpleCPLogger:
 
     def log_api_request(self, method: str, endpoint: str, status_code: int):
         """Log API request."""
-        self.logger.info(
-            f"API {method} {endpoint} - Status: {status_code}"
-        )
+        self.logger.info(f"API {method} {endpoint} - Status: {status_code}")
 
     def log_clipboard_event(self, event_type: str, details: str = ""):
         """Log clipboard-related events."""

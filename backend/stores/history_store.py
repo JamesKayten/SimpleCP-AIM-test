@@ -109,11 +109,9 @@ class HistoryStore:
         start_index = self.display_count
 
         while start_index < total_items:
-            end_index = min(
-                start_index + self.display_count - 1, total_items - 1
-            )
+            end_index = min(start_index + self.display_count - 1, total_items - 1)
             folder_name = f"{start_index + 1}-{end_index + 1}"
-            folder_items = self.items[start_index:end_index + 1]
+            folder_items = self.items[start_index : end_index + 1]
 
             folders.append(
                 {

@@ -29,4 +29,5 @@ struct SimpleCPApp: App {
         .windowResizability(.contentSize)
         .defaultPosition(.center)
     }
+
 }

@@ -5,7 +5,7 @@ Pydantic models for request/response validation.
 """
 
 from pydantic import BaseModel
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 
 
 class ClipboardItemResponse(BaseModel):

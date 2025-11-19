@@ -1,58 +1,13 @@
 # AI COLLABORATION - START HERE
 
-## 🚀 FRAMEWORK UPDATED - NEW TASK DETECTION SYSTEM
+**ANY AI working on this repository:**
 
-**Read `.ai/FRAMEWORK_USAGE.md` for complete guide**
+1. **Read `.ai/BEHAVIOR_RULES.md`** - Understand working style requirements
+2. **Read `.ai/CURRENT_TASK.md`** - Get current assignment
+3. **Execute tasks immediately** - No questions, no exploration
+4. **Update `.ai/CURRENT_TASK.md`** when tasks completed
 
----
-
-## For AI AGENTS (OCC/Other AIs) - EXECUTING Work
-
-1. **Check for pending work** (instant detection):
-```bash
-./.ai/check-tasks.sh
-# OR
-source .ai/STATUS && echo $TASK_STATE
-```
-
-2. **Read assignment** if PENDING:
-```bash
-cat .ai/CURRENT_TASK.md
-```
-
-3. **Read working rules**:
-```bash
-cat .ai/BEHAVIOR_RULES.md
-```
-
-4. **Execute immediately** - No questions, no exploration
-
-5. **Update status when done**:
-```bash
-sed -i 's/TASK_STATE=IN_PROGRESS/TASK_STATE=IDLE/' .ai/STATUS
-```
-
----
-
-## For TCC - ASSIGNING Work
-
-**⚡ 60-second guide:** `.ai/TCC_QUICK_REFERENCE.md`
-**📖 Full documentation:** `.ai/FRAMEWORK_USAGE.md`
-
-**Quick assign:**
-```bash
-# 1. Update STATUS file
-nano .ai/STATUS  # Set TASK_STATE=PENDING, add details
-
-# 2. Update CURRENT_TASK.md with task description
-# Use .ai/CURRENT_TASK.md.TEMPLATE as guide
-
-# 3. Done - AI will detect and execute automatically
-```
-
----
-
-## Quick Start (Legacy - Still Works)
+## Quick Start
 ```bash
 # Read current assignment
 cat .ai/CURRENT_TASK.md
@@ -63,9 +18,9 @@ cat .ai/CURRENT_TASK.md
 ## Project Info
 - **Type:** Python Backend/API
 - **Language:** python
-- **File Size Limit:** 250 lines
+- **File Size Limit:** 300 lines
 - **Test Coverage:** 90%
-- **Tools:** black,flake8,pytest,pyperclip
+- **Tools:** black,flake8,pytest
 
 ## File Structure
 - `BEHAVIOR_RULES.md` - How to work

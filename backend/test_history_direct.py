@@ -5,11 +5,12 @@ import sys
 import time
 from clipboard_manager import ClipboardManager
 
+
 def test_history_auto_folders():
     """Test auto-generated history folders by adding items directly."""
-    print("="*60)
+    print("=" * 60)
     print("Testing History Auto-Folder Generation")
-    print("="*60)
+    print("=" * 60)
 
     # Create manager instance
     manager = ClipboardManager()
@@ -46,9 +47,9 @@ def test_history_auto_folders():
         print(f"   Range: {folder['start_index']}-{folder['end_index']}")
         print(f"   Count: {folder['count']} items")
         print(f"   Items:")
-        for idx, item in enumerate(folder['items'][:3], 1):  # Show first 3
+        for idx, item in enumerate(folder["items"][:3], 1):  # Show first 3
             print(f"     {idx}. {item.display_string}")
-        if len(folder['items']) > 3:
+        if len(folder["items"]) > 3:
             print(f"     ... and {len(folder['items']) - 3} more")
 
     # Test recent history
@@ -69,9 +70,9 @@ def test_history_auto_folders():
     print(f"History matches: {len(results['history'])}")
     print(f"Snippet matches: {len(results['snippets'])}")
 
-    if results['history']:
+    if results["history"]:
         print("\nMatches:")
-        for item in results['history']:
+        for item in results["history"]:
             print(f"  - {item.display_string}")
 
     # Save data
@@ -84,11 +85,13 @@ def test_history_auto_folders():
     print("✓ All tests completed successfully!")
     print(f"{'='*60}\n")
 
+
 if __name__ == "__main__":
     try:
         test_history_auto_folders()
     except Exception as e:
         print(f"\n✗ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

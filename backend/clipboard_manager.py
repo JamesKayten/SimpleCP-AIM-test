@@ -8,6 +8,7 @@ No UI code - designed to be consumed by REST API and future Swift frontend.
 import pyperclip
 import json
 import os
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from stores.clipboard_item import ClipboardItem
 from stores.history_store import HistoryStore

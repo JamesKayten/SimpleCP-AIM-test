@@ -12,7 +12,8 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showSaveSnippetDialog = false
     @State private var selectedClipForSave: ClipItem?
-    @Environment(\.openWindow) private var openWindow
+    @State private var showCreateFolderSheet = false
+    @State private var newFolderName = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -82,7 +83,7 @@ struct ContentView: View {
             Spacer()
 
             Button(action: {
-                openWindow(id: "settings")
+                print("Settings button clicked - TODO: implement settings")
             }) {
                 Image(systemName: "gearshape.fill")
                     .foregroundColor(.secondary)
@@ -143,21 +144,24 @@ struct ContentView: View {
                     .font(.system(size: 11))
             }
             .buttonStyle(.borderedProminent)
+            .focusable()
             .help("Save current clipboard as snippet")
 
             Button(action: {
-                print("New folder button clicked")
-                createNewFolder()
+                print("New folder button clicked - creating auto-named folder")
+                createAutoNamedFolder()
             }) {
                 Label("New Folder", systemImage: "folder.badge.plus")
                     .font(.system(size: 11))
             }
             .buttonStyle(.borderedProminent)
+            .focusable()
             .help("Create new snippet folder")
 
             Menu {
-                Button("Create Folder...") {
-                    createNewFolder()
+                Button("Create Folder") {
+                    print("Menu: Create folder clicked")
+                    createAutoNamedFolder()
                 }
                 Button("Rename Folder...") {
                     // TODO: Implement
@@ -209,29 +213,6 @@ struct ContentView: View {
 
     // MARK: - Actions
 
-    private func createNewFolder() {
-        print("Create new folder function called")
-        let alert = NSAlert()
-        alert.messageText = "Create New Folder"
-        alert.informativeText = "Enter a name for the new folder:"
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
-
-        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        textField.placeholderString = "Folder name"
-        alert.accessoryView = textField
-
-        DispatchQueue.main.async {
-            let response = alert.runModal()
-            if response == .alertFirstButtonReturn {
-                let folderName = textField.stringValue
-                if !folderName.isEmpty {
-                    self.clipboardManager.createFolder(name: folderName)
-                    print("Folder created: \(folderName)")
-                }
-            }
-        }
-    }
 
     private func clearHistory() {
         let alert = NSAlert()
@@ -244,6 +225,22 @@ struct ContentView: View {
         if alert.runModal() == .alertFirstButtonReturn {
             clipboardManager.clearHistory()
         }
+    }
+
+    private func createAutoNamedFolder() {
+        // Generate a unique folder name
+        var folderNumber = 1
+        var proposedName = "Folder \(folderNumber)"
+
+        // Find the next available folder name
+        while clipboardManager.folders.contains(where: { $0.name == proposedName }) {
+            folderNumber += 1
+            proposedName = "Folder \(folderNumber)"
+        }
+
+        // Create the folder immediately without any dialog
+        clipboardManager.createFolder(name: proposedName)
+        print("✅ Auto-created folder: \(proposedName)")
     }
 
     private func deleteEmptyFolders() {
@@ -302,6 +299,70 @@ struct ContentView: View {
 struct ExportData: Codable {
     let snippets: [Snippet]
     let folders: [SnippetFolder]
+}
+
+// MARK: - Create Folder Sheet
+
+struct CreateFolderSheet: View {
+    @Binding var isPresented: Bool
+    @Binding var folderName: String
+    let clipboardManager: ClipboardManager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                Text("Create New Folder")
+                    .font(.headline)
+                Spacer()
+                Button(action: {
+                    print("Folder dialog close button clicked")
+                    isPresented = false
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Divider()
+
+            // Folder Name Input
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Folder Name:")
+                    .font(.subheadline)
+
+                TextField("Enter folder name", text: $folderName)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            Divider()
+
+            // Action Buttons
+            HStack {
+                Spacer()
+
+                Button("Cancel") {
+                    print("Folder creation cancelled")
+                    isPresented = false
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Button("Create Folder") {
+                    print("Creating folder with name: '\(folderName)'")
+                    if !folderName.isEmpty {
+                        clipboardManager.createFolder(name: folderName)
+                        print("✅ Folder created: \(folderName)")
+                        isPresented = false
+                    }
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(folderName.isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 400)
+    }
 }
 
 // MARK: - Preview

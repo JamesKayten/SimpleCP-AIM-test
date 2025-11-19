@@ -6,6 +6,7 @@ import time
 
 BASE_URL = "http://localhost:8000"
 
+
 def add_test_clips():
     """Add 25 test clips to history to test auto-folder generation."""
     print("Adding 25 test clips to history...")
@@ -17,8 +18,8 @@ def add_test_clips():
                 "content": f"Test clip content #{i} - This is a test item for history",
                 "name": f"History Item {i}",
                 "folder": "TestHistory",
-                "tags": ["test", f"item{i}"]
-            }
+                "tags": ["test", f"item{i}"],
+            },
         )
 
         if response.status_code == 200:
@@ -28,11 +29,12 @@ def add_test_clips():
 
         time.sleep(0.1)  # Small delay to ensure different timestamps
 
+
 def test_history_folders():
     """Test auto-generated history folders."""
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Testing History Folders API...")
-    print("="*50)
+    print("=" * 50)
 
     # Get history folders
     response = requests.get(f"{BASE_URL}/api/history/folders")
@@ -41,7 +43,9 @@ def test_history_folders():
         folders = response.json()
         print(f"\n✓ Found {len(folders)} auto-generated folders:")
         for folder in folders:
-            print(f"  - {folder['name']}: {folder['count']} items (indexes {folder['start_index']}-{folder['end_index']})")
+            print(
+                f"  - {folder['name']}: {folder['count']} items (indexes {folder['start_index']}-{folder['end_index']})"
+            )
     else:
         print(f"✗ Failed to get folders: {response.text}")
 
@@ -54,11 +58,12 @@ def test_history_folders():
     else:
         print(f"✗ Failed to get recent history: {response.text}")
 
+
 def test_stats():
     """Test stats endpoint."""
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Testing Stats API...")
-    print("="*50)
+    print("=" * 50)
 
     response = requests.get(f"{BASE_URL}/api/stats")
 
@@ -71,6 +76,7 @@ def test_stats():
         print(f"  - Max history: {stats['max_history']}")
     else:
         print(f"✗ Failed to get stats: {response.text}")
+
 
 if __name__ == "__main__":
     try:
@@ -87,9 +93,9 @@ if __name__ == "__main__":
         test_history_folders()
         test_stats()
 
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("✓ All tests completed!")
-        print("="*50)
+        print("=" * 50)
 
     except requests.exceptions.ConnectionError:
         print("✗ Could not connect to server at", BASE_URL)

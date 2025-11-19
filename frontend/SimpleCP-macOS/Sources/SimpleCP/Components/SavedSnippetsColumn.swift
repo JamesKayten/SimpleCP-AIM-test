@@ -14,6 +14,8 @@ struct SavedSnippetsColumn: View {
     @State private var hoveredSnippetId: UUID?
     @State private var editingSnippetId: UUID?
     @State private var editingSnippet: Snippet?
+    @State private var renamingFolder: SnippetFolder?
+    @State private var newFolderName: String = ""
 
     private var filteredSnippets: [Snippet] {
         if searchText.isEmpty {
@@ -54,7 +56,9 @@ struct SavedSnippetsColumn: View {
                             searchText: searchText,
                             hoveredSnippetId: $hoveredSnippetId,
                             editingSnippetId: $editingSnippetId,
-                            editingSnippet: $editingSnippet
+                            editingSnippet: $editingSnippet,
+                            renamingFolder: $renamingFolder,
+                            newFolderName: $newFolderName
                         )
                     }
                 }
@@ -63,6 +67,10 @@ struct SavedSnippetsColumn: View {
         }
         .sheet(item: $editingSnippet) { snippet in
             EditSnippetDialog(snippet: snippet)
+                .environmentObject(clipboardManager)
+        }
+        .sheet(item: $renamingFolder) { folder in
+            RenameFolderDialog(folder: folder, newName: $newFolderName)
                 .environmentObject(clipboardManager)
         }
     }
@@ -89,6 +97,8 @@ struct FolderView: View {
     @Binding var hoveredSnippetId: UUID?
     @Binding var editingSnippetId: UUID?
     @Binding var editingSnippet: Snippet?
+    @Binding var renamingFolder: SnippetFolder?
+    @Binding var newFolderName: String
 
     @State private var isHovered = false
 
@@ -127,7 +137,8 @@ struct FolderView: View {
             }
             .contextMenu {
                 Button("Rename Folder...") {
-                    renameFolder()
+                    newFolderName = folder.name
+                    renamingFolder = folder
                 }
                 Button("Change Icon...") {
                     changeIcon()
@@ -200,26 +211,6 @@ struct FolderView: View {
         }
     }
 
-    private func renameFolder() {
-        let alert = NSAlert()
-        alert.messageText = "Rename Folder"
-        alert.informativeText = "Enter a new name for '\(folder.name)':"
-        alert.addButton(withTitle: "Rename")
-        alert.addButton(withTitle: "Cancel")
-
-        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        textField.stringValue = folder.name
-        alert.accessoryView = textField
-
-        if alert.runModal() == .alertFirstButtonReturn {
-            let newName = textField.stringValue
-            if !newName.isEmpty {
-                var updatedFolder = folder
-                updatedFolder.rename(to: newName)
-                clipboardManager.updateFolder(updatedFolder)
-            }
-        }
-    }
 
     private func changeIcon() {
         let alert = NSAlert()
@@ -411,6 +402,83 @@ struct EditSnippetDialog: View {
         updatedSnippet.tags = editedTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
 
         clipboardManager.updateSnippet(updatedSnippet)
+        dismiss()
+    }
+}
+
+// MARK: - Rename Folder Dialog
+
+struct RenameFolderDialog: View {
+    @EnvironmentObject var clipboardManager: ClipboardManager
+    @Environment(\.dismiss) private var dismiss
+
+    let folder: SnippetFolder
+    @Binding var newName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Rename Folder")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("New name for '\(folder.name)':")
+                    .font(.subheadline)
+                TextField("Folder name", text: $newName)
+                    .textFieldStyle(.roundedBorder)
+                    .onAppear {
+                        // Pre-select the text for easy editing
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            if let window = NSApplication.shared.keyWindow,
+                               let textField = window.firstResponder as? NSTextField {
+                                textField.selectText(nil)
+                            }
+                        }
+                    }
+            }
+
+            HStack {
+                Spacer()
+
+                HStack {
+                    Text("Cancel")
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color(NSColor.controlBackgroundColor))
+                .cornerRadius(6)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    dismiss()
+                }
+
+                HStack {
+                    Text("Rename")
+                        .foregroundColor(newName.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .white)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(newName.trimmingCharacters(in: .whitespaces).isEmpty ? Color.gray : Color.blue)
+                .cornerRadius(6)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if !newName.trimmingCharacters(in: .whitespaces).isEmpty {
+                        renameFolder()
+                    }
+                }
+            }
+        }
+        .padding()
+        .frame(width: 400)
+    }
+
+    private func renameFolder() {
+        let trimmedName = newName.trimmingCharacters(in: .whitespaces)
+        if !trimmedName.isEmpty {
+            var updatedFolder = folder
+            updatedFolder.rename(to: trimmedName)
+            clipboardManager.updateFolder(updatedFolder)
+        }
         dismiss()
     }
 }

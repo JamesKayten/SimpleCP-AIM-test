@@ -75,9 +75,7 @@ class SimpleCP_Daemon:
         self.clipboard_thread.start()
 
         # Start API server thread
-        self.api_thread = threading.Thread(
-            target=self.start_api_server, daemon=True
-        )
+        self.api_thread = threading.Thread(target=self.start_api_server, daemon=True)
         self.api_thread.start()
 
         print(
@@ -127,9 +125,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="SimpleCP Background Daemon")
     parser.add_argument("--host", default="127.0.0.1", help="API server host")
-    parser.add_argument(
-        "--port", type=int, default=8000, help="API server port"
-    )
+    parser.add_argument("--port", type=int, default=8000, help="API server port")
     parser.add_argument(
         "--interval",
         type=int,

@@ -11,7 +11,7 @@ Provides a centralized configuration system with:
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 from dataclasses import dataclass, asdict
 
 
@@ -158,9 +158,7 @@ def load_config(config_path: Optional[str] = None) -> SimpleCPConfig:
         SimpleCPConfig instance
     """
     if config_path is None:
-        config_path = os.path.join(
-            os.path.dirname(__file__), "config.json"
-        )
+        config_path = os.path.join(os.path.dirname(__file__), "config.json")
 
     config = SimpleCPConfig.from_file(config_path)
     config.apply_env_overrides()
@@ -170,9 +168,7 @@ def load_config(config_path: Optional[str] = None) -> SimpleCPConfig:
 def save_default_config(config_path: Optional[str] = None):
     """Save default configuration to file."""
     if config_path is None:
-        config_path = os.path.join(
-            os.path.dirname(__file__), "config.json"
-        )
+        config_path = os.path.join(os.path.dirname(__file__), "config.json")
 
     config = SimpleCPConfig.default()
     config.to_file(config_path)

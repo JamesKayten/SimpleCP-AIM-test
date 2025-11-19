@@ -38,17 +38,13 @@ def create_router(clipboard_manager):
         items = clipboard_manager.get_all_history(limit)
         return [clipboard_item_to_response(item) for item in items]
 
-    @router.get(
-        "/api/history/recent", response_model=List[ClipboardItemResponse]
-    )
+    @router.get("/api/history/recent", response_model=List[ClipboardItemResponse])
     async def get_recent_history():
         """Get recent clipboard items for direct display."""
         items = clipboard_manager.get_recent_history()
         return [clipboard_item_to_response(item) for item in items]
 
-    @router.get(
-        "/api/history/folders", response_model=List[HistoryFolderResponse]
-    )
+    @router.get("/api/history/folders", response_model=List[HistoryFolderResponse])
     async def get_history_folders():
         """Get auto-generated history folder ranges."""
         folders = clipboard_manager.get_history_folders()
@@ -61,8 +57,7 @@ def create_router(clipboard_manager):
                     end_index=folder["end_index"],
                     count=folder["count"],
                     items=[
-                        clipboard_item_to_response(item)
-                        for item in folder["items"]
+                        clipboard_item_to_response(item) for item in folder["items"]
                     ],
                 )
             )
@@ -92,9 +87,7 @@ def create_router(clipboard_manager):
             result.append(
                 SnippetFolderResponse(
                     folder_name=folder_name,
-                    snippets=[
-                        clipboard_item_to_response(item) for item in items
-                    ],
+                    snippets=[clipboard_item_to_response(item) for item in items],
                 )
             )
         return result
@@ -122,9 +115,7 @@ def create_router(clipboard_manager):
                 request.clip_id, request.name, request.folder, request.tags
             )
             if not snippet:
-                raise HTTPException(
-                    status_code=404, detail="History item not found"
-                )
+                raise HTTPException(status_code=404, detail="History item not found")
         elif request.content:
             # Create directly
             snippet = clipboard_manager.add_snippet_direct(
@@ -136,9 +127,7 @@ def create_router(clipboard_manager):
             )
         return clipboard_item_to_response(snippet)
 
-    @router.put(
-        "/api/snippets/{folder_name}/{clip_id}", response_model=SuccessResponse
-    )
+    @router.put("/api/snippets/{folder_name}/{clip_id}", response_model=SuccessResponse)
     async def update_snippet(
         folder_name: str, clip_id: str, request: UpdateSnippetRequest
     ):
@@ -164,9 +153,7 @@ def create_router(clipboard_manager):
         "/api/snippets/{folder_name}/{clip_id}/move",
         response_model=SuccessResponse,
     )
-    async def move_snippet(
-        folder_name: str, clip_id: str, request: MoveSnippetRequest
-    ):
+    async def move_snippet(folder_name: str, clip_id: str, request: MoveSnippetRequest):
         """Move snippet to different folder."""
         success = clipboard_manager.move_snippet(
             folder_name, request.to_folder, clip_id
@@ -176,31 +163,31 @@ def create_router(clipboard_manager):
         return SuccessResponse(success=True, message="Snippet moved")
 
     # Folder endpoints
+    @router.get("/api/folders", response_model=List[str])
+    async def get_folders():
+        """Get list of all snippet folders."""
+        folders = clipboard_manager.get_snippet_folders()
+        return folders
+
     @router.post("/api/folders", response_model=SuccessResponse)
     async def create_folder(request: CreateFolderRequest):
         """Create new snippet folder."""
         success = clipboard_manager.create_snippet_folder(request.folder_name)
         if not success:
-            raise HTTPException(
-                status_code=409, detail="Folder already exists"
-            )
+            raise HTTPException(status_code=409, detail="Folder already exists")
         return SuccessResponse(success=True, message="Folder created")
 
     @router.put("/api/folders/{folder_name}", response_model=SuccessResponse)
     async def rename_folder(folder_name: str, request: RenameFolderRequest):
         """Rename snippet folder."""
-        success = clipboard_manager.rename_snippet_folder(
-            folder_name, request.new_name
-        )
+        success = clipboard_manager.rename_snippet_folder(folder_name, request.new_name)
         if not success:
             raise HTTPException(
                 status_code=404, detail="Folder not found or new name exists"
             )
         return SuccessResponse(success=True, message="Folder renamed")
 
-    @router.delete(
-        "/api/folders/{folder_name}", response_model=SuccessResponse
-    )
+    @router.delete("/api/folders/{folder_name}", response_model=SuccessResponse)
     async def delete_folder(folder_name: str):
         """Delete snippet folder and all its snippets."""
         success = clipboard_manager.delete_snippet_folder(folder_name)
@@ -223,13 +210,8 @@ def create_router(clipboard_manager):
         """Search across history and snippets."""
         results = clipboard_manager.search_all(q)
         return SearchResponse(
-            history=[
-                clipboard_item_to_response(item) for item in results["history"]
-            ],
-            snippets=[
-                clipboard_item_to_response(item)
-                for item in results["snippets"]
-            ],
+            history=[clipboard_item_to_response(item) for item in results["history"]],
+            snippets=[clipboard_item_to_response(item) for item in results["snippets"]],
         )
 
     # Stats endpoint
