@@ -18,8 +18,11 @@ from api.models import (
     SearchResponse,
     StatsResponse,
     SnippetFolderResponse,
-    ErrorResponse,
     SuccessResponse,
+    StatusResponse,
+    ExportData,
+    ImportRequest,
+    SearchRequest,
     clipboard_item_to_response,
 )
 
@@ -209,5 +212,40 @@ def create_router(clipboard_manager):
         """Get manager statistics."""
         stats = clipboard_manager.get_stats()
         return StatsResponse(**stats)
+
+    # Status endpoint
+    @router.get("/api/status", response_model=StatusResponse)
+    async def get_status():
+        """Get monitoring status."""
+        status = clipboard_manager.get_status()
+        return StatusResponse(**status)
+
+    # Export endpoint
+    @router.get("/api/export", response_model=ExportData)
+    async def export_snippets():
+        """Export all snippets."""
+        export_data = clipboard_manager.export_snippets()
+        return ExportData(**export_data)
+
+    # Import endpoint
+    @router.post("/api/import", response_model=SuccessResponse)
+    async def import_snippets(request: ImportRequest):
+        """Import snippets from export data."""
+        success = clipboard_manager.import_snippets(request.model_dump())
+        if not success:
+            raise HTTPException(status_code=400, detail="Import failed")
+        return SuccessResponse(success=True, message="Import successful")
+
+    # POST search endpoint
+    @router.post("/api/search", response_model=SearchResponse)
+    async def search_post(request: SearchRequest):
+        """Search across history and snippets (POST)."""
+        results = clipboard_manager.search_all(request.query)
+        history = results["history"] if request.include_history else []
+        snippets = results["snippets"] if request.include_snippets else []
+        return SearchResponse(
+            history=[clipboard_item_to_response(item) for item in history],
+            snippets=[clipboard_item_to_response(item) for item in snippets],
+        )
 
     return router
