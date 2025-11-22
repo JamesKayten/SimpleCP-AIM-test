@@ -39,6 +39,34 @@ SimpleCP-macOS/
 └── README.md
 ```
 
+### Backend API Integration
+
+SimpleCP uses a hybrid architecture with both local storage (UserDefaults) and backend API synchronization:
+
+#### API Client (`Services/APIClient.swift`)
+- Base URL: `http://localhost:8080`
+- Handles all backend API communication
+- Provides async/await methods for folder operations
+- Error handling with descriptive messages
+
+#### Synchronized Operations
+The following operations sync with the backend:
+- **Folder Creation**: Creates folder locally and syncs to backend
+- **Folder Renaming**: Renames folder locally, syncs to backend, reverts on failure
+- **Folder Deletion**: Deletes folder locally and syncs to backend
+
+#### Error Handling
+- Network errors are logged and displayed to user
+- Failed API calls trigger error alerts with recovery suggestions
+- Folder rename failures automatically revert local changes
+
+#### Architecture Notes
+- Frontend uses UUID-based folder identification
+- Backend uses name-based folder identification
+- Mapping is handled through folder names
+- Local operations execute first for responsive UI
+- Backend sync happens asynchronously
+
 ### Key Components
 
 #### SimpleCPApp.swift
@@ -174,9 +202,9 @@ If you prefer a full Xcode project instead of SPM:
 #### 5. Folder Operations
 - [ ] Click folder to expand/collapse
 - [ ] Right-click folder
-- [ ] Test "Rename Folder"
+- [x] Test "Rename Folder" (✅ Integrated with backend API)
 - [ ] Test "Change Icon"
-- [ ] Test "Delete Folder"
+- [ ] Test "Delete Folder" (✅ Integrated with backend API)
 
 #### 6. Snippet Operations
 - [ ] Click snippet to copy
@@ -238,12 +266,21 @@ If you prefer a full Xcode project instead of SPM:
 
 ## Known Limitations
 
-1. **Clipboard Format**: Currently only supports plain text (no images or rich text)
-2. **Global Shortcuts**: Keyboard shortcut customization UI is placeholder (needs implementation)
-3. **Launch at Login**: Toggle exists but requires LaunchAgent configuration
-4. **Drag & Drop**: Not yet implemented (planned feature)
+1. **Backend Dependency**: Folder operations (create, rename, delete) require backend server running on localhost:8080
+2. **Clipboard Format**: Currently only supports plain text (no images or rich text)
+3. **Global Shortcuts**: Keyboard shortcut customization UI is placeholder (needs implementation)
+4. **Launch at Login**: Toggle exists but requires LaunchAgent configuration
+5. **Drag & Drop**: Not yet implemented (planned feature)
 
 ## Troubleshooting
+
+### Backend API connection errors
+- **Symptom**: Folder operations fail with API errors
+- **Solution**:
+  1. Check backend server is running: `cd backend && python3 main.py`
+  2. Verify server is listening on `localhost:8080`
+  3. Check Console.app for API error logs
+  4. Ensure no firewall blocking localhost connections
 
 ### App doesn't appear in menu bar
 - Check that `LSUIElement` is set to `true` in Info.plist

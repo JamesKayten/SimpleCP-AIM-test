@@ -182,14 +182,56 @@ class ClipboardManager: ObservableObject {
         let folder = SnippetFolder(name: name, icon: icon, order: order)
         folders.append(folder)
         saveFolders()
-        logger.info("📁 Created folder: \(name)")
+
+        // Sync with backend
+        Task {
+            do {
+                try await APIClient.shared.createFolder(name: name)
+                await MainActor.run {
+                    logger.info("📁 Created folder: \(name) (synced with backend)")
+                }
+            } catch {
+                await MainActor.run {
+                    logger.error("❌ Failed to sync folder creation with backend: \(error.localizedDescription)")
+                    lastError = .apiError("Failed to sync folder creation: \(error.localizedDescription)")
+                    showError = true
+                }
+            }
+        }
     }
 
     func updateFolder(_ folder: SnippetFolder) {
         if let index = folders.firstIndex(where: { $0.id == folder.id }) {
+            let oldFolder = folders[index]
+            let oldName = oldFolder.name
+            let newName = folder.name
+
+            // Update local state first
             folders[index] = folder
             saveFolders()
-            logger.info("✏️ Updated folder: \(folder.name)")
+
+            // If name changed, sync with backend
+            if oldName != newName {
+                Task {
+                    do {
+                        try await APIClient.shared.renameFolder(oldName: oldName, newName: newName)
+                        await MainActor.run {
+                            logger.info("✏️ Folder renamed: '\(oldName)' → '\(newName)' (synced with backend)")
+                        }
+                    } catch {
+                        await MainActor.run {
+                            logger.error("❌ Failed to sync folder rename with backend: \(error.localizedDescription)")
+                            lastError = .apiError("Failed to sync folder rename: \(error.localizedDescription)")
+                            showError = true
+                            // Revert local change on API failure
+                            folders[index] = oldFolder
+                            saveFolders()
+                        }
+                    }
+                }
+            } else {
+                logger.info("✏️ Updated folder: \(folder.name)")
+            }
         }
     }
 
@@ -200,7 +242,22 @@ class ClipboardManager: ObservableObject {
         folders.removeAll { $0.id == folder.id }
         saveFolders()
         saveSnippets()
-        logger.info("🗑️ Deleted folder '\(folder.name)' and \(snippetCount) snippets")
+
+        // Sync with backend
+        Task {
+            do {
+                try await APIClient.shared.deleteFolder(name: folder.name)
+                await MainActor.run {
+                    logger.info("🗑️ Deleted folder '\(folder.name)' and \(snippetCount) snippets (synced with backend)")
+                }
+            } catch {
+                await MainActor.run {
+                    logger.error("❌ Failed to sync folder deletion with backend: \(error.localizedDescription)")
+                    lastError = .apiError("Failed to sync folder deletion: \(error.localizedDescription)")
+                    showError = true
+                }
+            }
+        }
     }
 
     func toggleFolderExpansion(_ folderId: UUID) {

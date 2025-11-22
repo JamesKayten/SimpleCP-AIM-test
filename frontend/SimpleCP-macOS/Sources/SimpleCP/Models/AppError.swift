@@ -15,6 +15,7 @@ enum AppError: LocalizedError {
     case invalidData
     case encodingFailure(String)
     case decodingFailure(String)
+    case apiError(String)
 
     var errorDescription: String? {
         switch self {
@@ -32,6 +33,8 @@ enum AppError: LocalizedError {
             return "Failed to encode \(what)"
         case .decodingFailure(let what):
             return "Failed to decode \(what)"
+        case .apiError(let message):
+            return "API Error: \(message)"
         }
     }
 
@@ -47,6 +50,8 @@ enum AppError: LocalizedError {
             return "The file may be corrupted. Try exporting your data again from the source."
         case .encodingFailure, .decodingFailure:
             return "This might be a temporary issue. Try again or restart the app."
+        case .apiError:
+            return "Make sure the backend server is running on localhost:8080. Try restarting the backend."
         }
     }
 
@@ -66,6 +71,8 @@ enum AppError: LocalizedError {
             return "Unable to convert data to storage format."
         case .decodingFailure:
             return "Unable to read data from storage."
+        case .apiError:
+            return "Unable to communicate with the backend server."
         }
     }
 }
