@@ -8,6 +8,16 @@ SimpleCP provides a comprehensive REST API for clipboard management, snippet org
 
 **Version:** 1.0.0
 
+## Frontend Integration
+
+The Swift macOS frontend integrates with this API through:
+- **APIClient** (`frontend/SimpleCP-macOS/Sources/SimpleCP/Services/APIClient.swift`)
+- Folder operations (create, rename, delete) are synchronized with the backend
+- Local UserDefaults + Backend API hybrid architecture
+- Async/await error handling with automatic revert on failures
+
+For detailed integration documentation, see: `/docs/FOLDER_API_INTEGRATION.md`
+
 ---
 
 ## Core Endpoints
