@@ -32,6 +32,8 @@ class ClipboardManager: ObservableObject {
     init() {
         loadData()
         startMonitoring()
+        // CRITICAL FIX: Sync with backend on startup
+        syncWithBackend()
     }
 
     // MARK: - Clipboard Monitoring
@@ -48,6 +50,66 @@ class ClipboardManager: ObservableObject {
         }
 
         logger.info("📋 Clipboard monitoring started")
+    }
+
+    // MARK: - Backend Synchronization
+
+    private func syncWithBackend() {
+        Task {
+            await syncWithBackendAsync()
+        }
+    }
+
+    private func syncWithBackendAsync() async {
+        do {
+            logger.info("🔄 Syncing folders with backend...")
+
+            // Fetch current folder names from backend
+            let backendFolders = try await APIClient.shared.fetchFolderNames()
+
+            await MainActor.run {
+                // Update existing folders and add new ones while preserving IDs
+                var updatedFolders = self.folders
+
+                // Remove folders that no longer exist in backend
+                updatedFolders.removeAll { folder in
+                    !backendFolders.contains(folder.name)
+                }
+
+                // Add new folders from backend
+                for (index, folderName) in backendFolders.enumerated() {
+                    if !updatedFolders.contains(where: { $0.name == folderName }) {
+                        // Create new folder for backend-only folders
+                        let newFolder = SnippetFolder(name: folderName, icon: "📁", order: index)
+                        updatedFolders.append(newFolder)
+                    }
+                }
+
+                // Update folder order to match backend order
+                for (index, folderName) in backendFolders.enumerated() {
+                    if let folderIndex = updatedFolders.firstIndex(where: { $0.name == folderName }) {
+                        var folder = updatedFolders[folderIndex]
+                        folder.order = index
+                        folder.modifiedAt = Date()
+                        updatedFolders[folderIndex] = folder
+                    }
+                }
+
+                // Sort by order to match backend ordering
+                updatedFolders.sort { $0.order < $1.order }
+
+                // Update local state while preserving existing folder IDs
+                self.folders = updatedFolders
+                self.saveFolders()
+
+                self.logger.info("✅ Synced \(self.folders.count) folders with backend")
+            }
+        } catch {
+            await MainActor.run {
+                logger.error("❌ Failed to sync with backend: \(error.localizedDescription)")
+                // Continue with local folders if backend sync fails
+            }
+        }
     }
 
     func stopMonitoring() {
@@ -178,9 +240,16 @@ class ClipboardManager: ObservableObject {
     // MARK: - Folder Management
 
     func createFolder(name: String, icon: String = "📁") {
-        let order = folders.count
-        let folder = SnippetFolder(name: name, icon: icon, order: order)
-        folders.append(folder)
+        // Insert new folders at the top (order 0)
+        let folder = SnippetFolder(name: name, icon: icon, order: 0)
+
+        // Increment order of all existing folders
+        for index in folders.indices {
+            folders[index].order += 1
+        }
+
+        // Insert new folder at the beginning
+        folders.insert(folder, at: 0)
         saveFolders()
 
         // Sync with backend
@@ -218,6 +287,8 @@ class ClipboardManager: ObservableObject {
                         await MainActor.run {
                             logger.info("✏️ Folder renamed: '\(oldName)' → '\(newName)' (synced with backend)")
                         }
+                        // CRITICAL FIX: Re-sync with backend after successful rename
+                        await syncWithBackendAsync()
                     } catch {
                         await MainActor.run {
                             logger.error("❌ Failed to sync folder rename with backend: \(error.localizedDescription)")

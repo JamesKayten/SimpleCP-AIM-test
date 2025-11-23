@@ -37,11 +37,31 @@ class APIClient {
     private let baseURL: String
     private let logger = Logger(subsystem: "com.simplecp.app", category: "api")
 
-    init(baseURL: String = "http://localhost:8080") {
+    init(baseURL: String = "http://localhost:8000") {
         self.baseURL = baseURL
     }
 
     // MARK: - Folder Operations
+
+    func fetchFolderNames() async throws -> [String] {
+        let url = URL(string: "\(baseURL)/api/folders")!
+
+        logger.info("📡 API: Fetching folder names from backend")
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.httpError(statusCode: httpResponse.statusCode, message: "Failed to fetch folders")
+        }
+
+        let folderNames = try JSONDecoder().decode([String].self, from: data)
+        logger.info("✅ Fetched \(folderNames.count) folder names from backend")
+        return folderNames
+    }
 
     func renameFolder(oldName: String, newName: String) async throws {
         let urlString = "\(baseURL)/api/folders/\(oldName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? oldName)"
