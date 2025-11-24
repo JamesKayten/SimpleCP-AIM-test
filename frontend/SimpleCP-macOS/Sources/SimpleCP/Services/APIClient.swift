@@ -172,4 +172,125 @@ class APIClient {
             throw APIError.networkError(error)
         }
     }
+
+    // MARK: - Snippet Operations
+
+    func createSnippet(name: String, content: String, folder: String, tags: [String]) async throws {
+        let urlString = "\(baseURL)/api/snippets"
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "name": name,
+            "content": content,
+            "folder": folder,
+            "tags": tags
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        logger.info("📡 API: Creating snippet '\(name)' in folder '\(folder)'")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            if httpResponse.statusCode != 200 {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                logger.error("❌ API Error: \(httpResponse.statusCode) - \(errorMessage)")
+                throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+            }
+
+            logger.info("✅ Snippet created successfully")
+        } catch let error as APIError {
+            throw error
+        } catch {
+            logger.error("❌ Network error: \(error.localizedDescription)")
+            throw APIError.networkError(error)
+        }
+    }
+
+    func updateSnippet(folderName: String, clipId: String, content: String?, name: String?, tags: [String]?) async throws {
+        let urlString = "\(baseURL)/api/snippets/\(folderName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? folderName)/\(clipId)"
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: Any] = [:]
+        if let content = content { body["content"] = content }
+        if let name = name { body["name"] = name }
+        if let tags = tags { body["tags"] = tags }
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        logger.info("📡 API: Updating snippet in folder '\(folderName)'")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            if httpResponse.statusCode != 200 {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                logger.error("❌ API Error: \(httpResponse.statusCode) - \(errorMessage)")
+                throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+            }
+
+            logger.info("✅ Snippet updated successfully")
+        } catch let error as APIError {
+            throw error
+        } catch {
+            logger.error("❌ Network error: \(error.localizedDescription)")
+            throw APIError.networkError(error)
+        }
+    }
+
+    func deleteSnippet(folderName: String, clipId: String) async throws {
+        let urlString = "\(baseURL)/api/snippets/\(folderName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? folderName)/\(clipId)"
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        logger.info("📡 API: Deleting snippet from folder '\(folderName)'")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            if httpResponse.statusCode != 200 {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                logger.error("❌ API Error: \(httpResponse.statusCode) - \(errorMessage)")
+                throw APIError.httpError(statusCode: httpResponse.statusCode, message: errorMessage)
+            }
+
+            logger.info("✅ Snippet deleted successfully")
+        } catch let error as APIError {
+            throw error
+        } catch {
+            logger.error("❌ Network error: \(error.localizedDescription)")
+            throw APIError.networkError(error)
+        }
+    }
 }

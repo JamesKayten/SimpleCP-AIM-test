@@ -50,5 +50,25 @@
   "ww": [],
   "Testing Sync": [],
   "Folder 1": [],
-  "qqq": []
+  "qqq": [],
+  "Backend Test Folder": [
+    {
+      "content": "Test snippet from backend",
+      "timestamp": "2025-11-24T03:41:43.376608",
+      "clip_id": "1c3ee6b18f2d059b",
+      "content_type": "text",
+      "display_length": 50,
+      "display_string": "Test snippet from backend",
+      "source_app": null,
+      "item_type": "snippet",
+      "has_name": true,
+      "snippet_name": "Backend Test",
+      "folder_path": "Backend Test Folder",
+      "tags": [
+        "backend",
+        "test"
+      ]
+    }
+  ],
+  "Integration Test Folder": []
 }
