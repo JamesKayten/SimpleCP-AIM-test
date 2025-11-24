@@ -105,13 +105,27 @@ After completing ANY task from the board, TCC MUST:
 
 ---
 
-## AICM Sync Rule
+## AICM Sync Rule (Bidirectional)
 
-**Any changes to AICM framework files while working in SimpleCP must also be committed to the main AI-Collaboration-Management repository.**
+AICM framework files must stay synchronized between repositories:
 
-This keeps the main AICM repo up to date with improvements discovered during project work.
+**Working in SimpleCP → sync TO main AICM repo:**
+- Any AICM improvements discovered during project work
+- Copy changes to AI-Collaboration-Management and commit
 
-TCC is responsible for syncing AICM changes back to the main repo.
+**Working in AICM repo → sync TO SimpleCP:**
+- Any updates to CLAUDE.md, hooks, scripts, or BOARD.md
+- Copy changes to SimpleCP's AICM copy and commit
+
+**TCC is responsible for both sync directions.**
+
+After AICM work in either repo, TCC must update the other and report:
+```
+✅ AICM SYNC
+- Source: [repo where changes were made]
+- Target: [repo that was updated]
+- Files synced: [list]
+```
 
 ---
 
