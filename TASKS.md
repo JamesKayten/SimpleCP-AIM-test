@@ -1,19 +1,27 @@
 # Task List
 
-**Updated:** 2025-11-23
+**Updated:** 2025-11-24
 **Project:** SimpleCP - Modern Clipboard Manager
 
 ---
 
 ## In Progress
 
-Ready for development tasks
+🚨 **Critical Bug Fix - Folder Rename Loop**
+- Analysis complete - Ready for OCC4 implementation
+- Files to modify: `SavedSnippetsColumn.swift`, `ClipboardManager.swift`
+- Root cause: Dialog state management + unnecessary backend re-sync
+- Testing environment active: Backend (8000) + Frontend running
 
 ---
 
 ## Pending
 
-Choose next feature to implement:
+High Priority:
+- Complete folder rename bug fix implementation
+- Test fix with active frontend/backend setup
+
+Future features:
 - Enhanced clipboard history UI
 - Text formatting options
 - Search/filter functionality
@@ -25,7 +33,7 @@ Choose next feature to implement:
 ## Completed
 
 - ✅ **Python Backend Development**
-  - FastAPI REST server (localhost:8080)
+  - FastAPI REST server (localhost:8000)
   - Clipboard monitoring system
   - JSON storage with history
   - Comprehensive test suite

@@ -3,25 +3,57 @@
 **Repository:** SimpleCP
 **Project:** Modern Clipboard Manager for macOS
 **Branch:** main
-**Last Updated:** 2025-11-23
+**Last Updated:** 2025-11-24
 
 ---
 
 ## Quick Status
 
 ✅ **Simplified Framework v3.0 Installed**
-✅ **Python Backend Complete** - FastAPI REST server
-✅ **Swift Frontend Complete** - MenuBar app
-✅ **Production Ready** - Full testing infrastructure
+✅ **Python Backend Complete** - FastAPI REST server (localhost:8000)
+✅ **Swift Frontend Complete** - MenuBar app running
+⚠️ **Critical Bug Identified** - Folder rename loop issue
+🔍 **Analysis Complete** - Ready for OCC4 implementation
 
-**Ready for active development.**
+**Frontend tested successfully - Bug analysis submitted for OCC4 work.**
+
+---
+
+## 🚨 Critical Bug Report
+
+### **Issue**: Folder Rename Loop Bug
+**Severity**: HIGH - Core functionality broken
+**Status**: ✅ **Analysis Complete** - Ready for OCC4 implementation
+
+#### Root Cause Analysis:
+1. **Dialog State Management** - `renamingFolder` not properly reset to `nil`
+   - Location: `SavedSnippetsColumn.swift:72-75`
+   - Issue: Sheet binding doesn't clear state on dismiss
+
+2. **Unnecessary Backend Re-sync** - Triggers view updates during dialog dismissal
+   - Location: `ClipboardManager.swift:284-291`
+   - Issue: `syncWithBackendAsync()` call interferes with dialog state
+
+3. **Race Condition** - Async operations vs dialog dismissal timing
+
+#### Fixes Required:
+- **Fix #1**: Explicit dialog state reset in `RenameFolderDialog.renameFolder()`
+- **Fix #2**: Remove unnecessary `syncWithBackendAsync()` call after rename
+- **Fix #3**: Proper async operation handling
+
+#### Testing Environment:
+- ✅ Backend running: `localhost:8000`
+- ✅ Frontend running: MenuBar app active
+- ✅ Bug reproduced and analyzed
+
+**Ready for immediate OCC4 implementation.**
 
 ---
 
 ## Project Components
 
 ### Backend (`/backend`)
-- **FastAPI REST server** - localhost:8080
+- **FastAPI REST server** - localhost:8000
 - **Clipboard monitoring** - Real-time capture
 - **JSON storage** - History management
 - **Test suite** - Comprehensive coverage
