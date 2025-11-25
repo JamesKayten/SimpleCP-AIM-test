@@ -7,11 +7,30 @@ Based on Flycut's favorites store pattern with folder organization.
 
 import logging
 import re
+import sys
+import traceback
 from typing import Dict, List, Optional, Callable
 from stores.clipboard_item import ClipboardItem
 
 # Configure logger for this module
 logger = logging.getLogger(__name__)
+
+
+def _log_resource_state(operation: str, context: dict = None):
+    """Log memory and resource state for debugging crashes."""
+    try:
+        import resource
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        mem_mb = usage.ru_maxrss / 1024 / 1024  # Convert to MB (macOS reports bytes)
+        logger.debug(f"[RESOURCE] {operation}: max_rss={mem_mb:.2f}MB, user_time={usage.ru_utime:.3f}s")
+    except ImportError:
+        pass  # resource module not available on all platforms
+
+    # Log Python memory info
+    logger.debug(f"[RESOURCE] {operation}: ref_count={len(sys.modules)} modules loaded")
+
+    if context:
+        logger.debug(f"[RESOURCE] {operation}: context={context}")
 
 
 class SnippetStore:
@@ -66,6 +85,14 @@ class SnippetStore:
         logger.debug(f"  old_name repr: {repr(old_name)}")
         logger.debug(f"  new_name repr: {repr(new_name)}")
 
+        # Log resource state at start
+        _log_resource_state("rename_folder:START", {
+            "old_name": old_name,
+            "new_name": new_name,
+            "folder_count": len(self.folders),
+            "total_snippets": len(self)
+        })
+
         # Validate input
         if not old_name or not old_name.strip():
             logger.warning("rename_folder failed: SOURCE_EMPTY")
@@ -111,11 +138,21 @@ class SnippetStore:
         # Perform the rename
         try:
             logger.info(f"rename_folder: performing rename '{old_name}' -> '{new_name}'")
+            _log_resource_state("rename_folder:BEFORE_POP")
+
             self.folders[new_name] = self.folders.pop(old_name)
-            for item in self.folders[new_name]:
+            _log_resource_state("rename_folder:AFTER_POP")
+
+            snippet_count = len(self.folders[new_name])
+            for i, item in enumerate(self.folders[new_name]):
                 item.folder_path = new_name
+                if i % 100 == 0 and snippet_count > 100:
+                    _log_resource_state(f"rename_folder:UPDATE_ITEM_{i}/{snippet_count}")
+
             self.modified = True
+            _log_resource_state("rename_folder:BEFORE_NOTIFY")
             self._notify_delegates("folder_renamed", old_name, new_name)
+            _log_resource_state("rename_folder:AFTER_NOTIFY")
 
             logger.info(f"rename_folder: SUCCESS - '{old_name}' -> '{new_name}'")
             return {
@@ -123,6 +160,10 @@ class SnippetStore:
                 "message": f"Folder renamed from '{old_name}' to '{new_name}' successfully"
             }
         except Exception as e:
+            _log_resource_state("rename_folder:EXCEPTION", {
+                "exception_type": type(e).__name__,
+                "exception_msg": str(e)
+            })
             logger.error(f"rename_folder EXCEPTION: {type(e).__name__}: {str(e)}", exc_info=True)
             return {
                 "success": False,
