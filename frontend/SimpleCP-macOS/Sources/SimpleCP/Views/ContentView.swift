@@ -59,19 +59,11 @@ struct ContentView: View {
             .environmentObject(clipboardManager)
         }
         .sheet(item: $folderToRename) { folder in
-            RenameFolderDialogView(
-                folder: folder,
-                newName: $renameFolderNewName,
-                onRename: { newName in
-                    var updatedFolder = folder
-                    updatedFolder.rename(to: newName)
-                    clipboardManager.updateFolder(updatedFolder)
-                    folderToRename = nil
-                },
-                onCancel: {
+            RenameFolderDialog(folder: folder, newName: $renameFolderNewName)
+                .environmentObject(clipboardManager)
+                .onDisappear {
                     folderToRename = nil
                 }
-            )
         }
         // Error alert for clipboard manager errors
         .alert("Error", isPresented: $clipboardManager.showError, presenting: clipboardManager.lastError) { error in
@@ -487,56 +479,7 @@ struct CreateFolderSheet: View {
     }
 }
 
-// MARK: - Rename Folder Dialog View
-
-struct RenameFolderDialogView: View {
-    let folder: SnippetFolder
-    @Binding var newName: String
-    let onRename: (String) -> Void
-    let onCancel: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Rename Folder")
-                .font(.headline)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("New name for '\(folder.name)':")
-                    .font(.subheadline)
-                TextField("Folder name", text: $newName)
-                    .textFieldStyle(.roundedBorder)
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            if let window = NSApplication.shared.keyWindow,
-                               let textField = window.firstResponder as? NSTextField {
-                                textField.selectText(nil)
-                            }
-                        }
-                    }
-            }
-
-            HStack {
-                Spacer()
-
-                Button("Cancel") {
-                    onCancel()
-                }
-                .keyboardShortcut(.cancelAction)
-
-                Button("Rename") {
-                    let trimmedName = newName.trimmingCharacters(in: .whitespaces)
-                    if !trimmedName.isEmpty {
-                        onRename(trimmedName)
-                    }
-                }
-                .keyboardShortcut(.defaultAction)
-                .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-        }
-        .padding()
-        .frame(width: 400)
-    }
-}
+// MARK: - Rename functionality consolidated in SavedSnippetsColumn
 
 // MARK: - Preview
 

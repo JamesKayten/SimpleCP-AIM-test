@@ -279,7 +279,7 @@ class BackendService: ObservableObject {
 
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 logger.info("✅ Backend health check passed")
-                DispatchQueue.main.async {
+                await MainActor.run {
                     self.consecutiveFailures = 0
                     self.backendError = nil
                 }
@@ -294,7 +294,7 @@ class BackendService: ObservableObject {
     }
 
     private func handleHealthCheckFailure() async {
-        DispatchQueue.main.async {
+        await MainActor.run {
             self.consecutiveFailures += 1
             self.logger.warning("⚠️ Health check failure #\(self.consecutiveFailures)")
 
@@ -393,7 +393,7 @@ class BackendService: ObservableObject {
 
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 // Backend is responsive
-                DispatchQueue.main.async {
+                await MainActor.run {
                     self.consecutiveFailures = 0
                     if !self.isRunning {
                         self.isRunning = true
@@ -404,7 +404,7 @@ class BackendService: ObservableObject {
         } catch {
             // Don't log every failed health check to avoid spam
             // Only track consecutive failures
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.consecutiveFailures += 1
             }
         }
@@ -553,7 +553,15 @@ class BackendService: ObservableObject {
     }
 
     deinit {
-        stopMonitoring()
-        stopBackend()
+        // Clean up timers synchronously (safe in deinit)
+        monitoringTimer?.invalidate()
+        monitoringTimer = nil
+        healthCheckTimer?.invalidate()
+        healthCheckTimer = nil
+
+        // Clean up backend process
+        if let process = backendProcess, process.isRunning {
+            process.terminate()
+        }
     }
 }
