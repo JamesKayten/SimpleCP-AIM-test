@@ -138,36 +138,79 @@ INFO: PUT /api/folders/TCC_Test_Folder HTTP/1.1 200 OK  ← CORRECT ENDPOINT WOR
 
 ---
 
-## 🚨 **FILE SIZE COMPLIANCE VIOLATIONS (2025-11-30)**
+## 🚨 **TCC FILE SIZE COMPLIANCE VIOLATIONS (2025-11-30)**
 
-### **Branch**: `claude/session-restore-documentation-014CJUcRqwetMNMYrzwPMSwe`
-**Status**: ❌ **MERGE BLOCKED** - File size violations detected
-**Reporter**: TCC (Testing/Coordination Claude)
-**Date**: 2025-11-30
+**Repository**: SimpleCP
+**Branch**: claude/session-restore-documentation-014CJUcRqwetMNMYrzwPMSwe
+**TCC Action**: MERGE BLOCKED - File size violations detected
 
-### **Violations Found**:
-1. **setup-ai-collaboration.sh** - 657 lines (exceeds 200 line limit for shell scripts)
-2. **ClipboardManager.swift** - 556 lines (exceeds 300 line limit for Swift files)
-3. **health.py** - 270 lines (exceeds 250 line limit for Python files)
-4. **prepare_signing.sh** - 219 lines (exceeds 200 line limit for shell scripts)
+### **CRITICAL: Branch Cannot Be Merged Until Violations Are Fixed**
 
-### **Required Actions for OCC**:
-- [ ] **Split setup-ai-collaboration.sh** into smaller modules (< 200 lines each)
-- [ ] **Refactor ClipboardManager.swift** into separate classes/files (< 300 lines each)
-- [ ] **Refactor health.py** into smaller modules (< 250 lines each)
-- [ ] **Split prepare_signing.sh** into smaller scripts (< 200 lines each)
+**File Size Limits Enforced:**
+- Python (`.py`): 250 lines max
+- Swift (`.swift`): 300 lines max
+- Markdown (`.md`): 500 lines max
+- Shell scripts (`.sh`): 200 lines max
 
-**Branch will remain unmerged until all file size violations are resolved.**
+### **VIOLATION REPORT - 30+ Files Exceed Limits**
 
-### **TCC /works-ready Status (2025-11-30)**
-**Reporter**: TCC
-**Status**: ❌ **NO MERGES COMPLETED** - File size violations prevent merge
-**Action Taken**:
-- ✅ Repository cleanup committed (commit: `accc90b`)
-- ✅ Sync verified - local and remote main are synchronized
-- ❌ Branch merge blocked due to file size violations above
+#### **Markdown Files (Over 500 lines):**
+- `docs/OCC_PROMPT.md` - **1207 lines** (VIOLATION: +707 lines)
+- `docs/marketing/LAUNCH_TEMPLATES.md` - **1014 lines** (VIOLATION: +514 lines)
+- `docs/IMPROVEMENTS.md` - **982 lines** (VIOLATION: +482 lines)
+- `docs/marketing/GROWTH_TACTICS.md` - **974 lines** (VIOLATION: +474 lines)
+- `docs/marketing/DISTRIBUTION_MARKETING_STRATEGY.md` - **947 lines** (VIOLATION: +447 lines)
+- `docs/STATIC_ANALYSIS.md` - **860 lines** (VIOLATION: +360 lines)
+- `docs/marketing/QUICK_START_LAUNCH_GUIDE.md` - **800 lines** (VIOLATION: +300 lines)
+- `docs/development/CODE_STANDARDS.md` - **732 lines** (VIOLATION: +232 lines)
+- `docs/marketing/STRATEGY_INDEX.md` - **623 lines** (VIOLATION: +123 lines)
+- `docs/marketing/STRATEGY_OVERVIEW.md` - **604 lines** (VIOLATION: +104 lines)
+- `docs/marketing/LAUNCH_CHECKLIST.md` - **589 lines** (VIOLATION: +89 lines)
+- `docs/development/RELEASES.md` - **555 lines** (VIOLATION: +55 lines)
+- `docs/development/DEVELOPMENT.md` - **554 lines** (VIOLATION: +54 lines)
+- `docs/UI_UX_SPECIFICATION_v3.md` - **525 lines** (VIOLATION: +25 lines)
 
-**Required for merge**: OCC must resolve all file size violations in `claude/session-restore-documentation-014CJUcRqwetMNMYrzwPMSwe`
+#### **Python Files (Over 250 lines):**
+- `web_command_manager.py` - **568 lines** (VIOLATION: +318 lines)
+- `backend/stores/snippet_store.py` - **312 lines** (VIOLATION: +62 lines)
+- `backend/clipboard_manager.py` - **287 lines** (VIOLATION: +37 lines)
+- `backend/api/endpoints.py` - **281 lines** (VIOLATION: +31 lines)
+- `backend/tests/test_snippet_folder.py` - **280 lines** (VIOLATION: +30 lines)
+- `tools/monitoring/health.py` - **270 lines** (VIOLATION: +20 lines)
+- `AudioApp/backend/services/metadata_service.py` - **260 lines** (VIOLATION: +10 lines)
+- `AudioApp/backend/services/audio_player.py` - **252 lines** (VIOLATION: +2 lines)
+
+#### **Swift Files (Over 300 lines):**
+- `frontend/SimpleCP-macOS/Sources/SimpleCP/Services/BackendService.swift` - **567 lines** (VIOLATION: +267 lines)
+- `frontend/SimpleCP-macOS/Sources/SimpleCP/Managers/ClipboardManager.swift` - **556 lines** (VIOLATION: +256 lines)
+- `frontend/SimpleCP-macOS/Sources/SimpleCP/Components/SavedSnippetsColumn.swift` - **496 lines** (VIOLATION: +196 lines)
+- `frontend/SimpleCP-macOS/Sources/SimpleCP/Views/ContentView.swift` - **490 lines** (VIOLATION: +190 lines)
+- `frontend/SimpleCP-macOS/Sources/SimpleCP/Views/SettingsWindow.swift` - **481 lines** (VIOLATION: +181 lines)
+- `frontend/SimpleCP-macOS/Sources/SimpleCP/Services/APIClient.swift` - **419 lines** (VIOLATION: +119 lines)
+- `AudioApp/AudioApp/Services/AudioAppAPI.swift` - **303 lines** (VIOLATION: +3 lines)
+
+#### **Shell Scripts (Over 200 lines):**
+- `setup-ai-collaboration.sh` - **657 lines** (VIOLATION: +457 lines)
+
+### **REQUIRED ACTIONS FOR OCC:**
+
+**IMMEDIATE REQUIREMENTS:**
+1. **Refactor files to comply with size limits** - Break large files into smaller modules
+2. **Document refactoring approach** - Explain how files will be split
+3. **Re-submit branch** - Only after all violations are fixed
+
+**SUGGESTED APPROACH:**
+- **Large Documentation**: Split into multiple focused files
+- **Large Python Files**: Extract classes/functions into separate modules
+- **Large Swift Files**: Split into focused components/services
+- **Shell Scripts**: Break into smaller utility scripts
+
+### **TCC ACTION: MERGE BLOCKED**
+**Status**: ❌ **CANNOT MERGE** - File size compliance failures
+**Next Step**: OCC must fix violations and re-submit branch
+**Branch**: `claude/session-restore-documentation-014CJUcRqwetMNMYrzwPMSwe` (BLOCKED)
+
+**TCC will NOT merge any branch with file size violations - No exceptions.**
 
 ---
 
