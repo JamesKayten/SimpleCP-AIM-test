@@ -3,7 +3,7 @@
 
 **Created**: November 17, 2025
 **Framework Repository**: https://github.com/JamesKayten/Averys-AI-Collaboration-Hack
-**Strategy Documents Location**: /Volumes/User_Smallfavor/Users/Smallfavor/Documents/SimpleCP/
+**Strategy Documents Location**: `docs/marketing/`
 
 ---
 
@@ -601,4 +601,4 @@ Good luck! 🚀
 4. LAUNCH_CHECKLIST.md (tactical action items)
 5. GROWTH_TACTICS.md (advanced strategies)
 
-All located at: `/Volumes/User_Smallfavor/Users/Smallfavor/Documents/SimpleCP/`
+All located at: `docs/marketing/`

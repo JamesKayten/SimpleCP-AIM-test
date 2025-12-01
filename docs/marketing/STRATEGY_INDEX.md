@@ -4,7 +4,7 @@
 **Created**: November 17, 2025
 **Total Strategy Size**: 120KB across 5 comprehensive documents
 **Framework Repository**: https://github.com/JamesKayten/Averys-AI-Collaboration-Hack
-**Local Framework Path**: /Volumes/User_Smallfavor/Users/Smallfavor/Documents/Averys-AI-Collaboration-Hack/
+**Local Framework Path**: `./` (this repository)
 
 ---
 
@@ -606,11 +606,9 @@ Good luck! 🚀
 
 ---
 
-**All strategy documents located at**:
-`/Volumes/User_Smallfavor/Users/Smallfavor/Documents/SimpleCP/`
+**All strategy documents located at**: `docs/marketing/`
 
-**Framework repository**:
-`/Volumes/User_Smallfavor/Users/Smallfavor/Documents/Averys-AI-Collaboration-Hack/`
+**Framework repository**: This repository
 
 **GitHub URL** (to be corrected in framework):
 `https://github.com/JamesKayten/Averys-AI-Collaboration-Hack`

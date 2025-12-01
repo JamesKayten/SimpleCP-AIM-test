@@ -24,7 +24,7 @@
 
 **Fix GitHub URLs** (30 min):
 ```bash
-cd /Volumes/User_Smallfavor/Users/Smallfavor/Documents/Averys-AI-Collaboration-Hack
+cd /path/to/your/project
 
 # Find and replace in all files
 # Change: github.com/Avery/Averys-AI-Collaboration-Hack
@@ -797,4 +797,4 @@ For detailed strategies, see:
 - LAUNCH_CHECKLIST.md (detailed tasks)
 - GROWTH_TACTICS.md (advanced techniques)
 
-All located in: `/Volumes/User_Smallfavor/Users/Smallfavor/Documents/SimpleCP/`
+All located in: `docs/marketing/`
