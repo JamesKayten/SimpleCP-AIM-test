@@ -214,34 +214,41 @@ INFO: PUT /api/folders/TCC_Test_Folder HTTP/1.1 200 OK  ← CORRECT ENDPOINT WOR
 
 ---
 
-## 📋 **URGENT OCC TASK ASSIGNMENTS**
+## 📋 **OCC TASK ASSIGNMENTS - STATUS UPDATE (2025-12-01)**
 
 ### **PRIORITY 1: Fix Frontend API Endpoint (CRITICAL)**
-- **OCC:** Find frontend folder rename code (likely in `APIClient.swift` or similar)
-- **OCC:** Change API call from `PUT /api/folders/rename` to `PUT /api/folders/{folder_name}`
-- **Expected Location**: Swift API client making HTTP requests
-- **Error Message**: "Folder 'rename' does not exist" (404)
-- **Solution**: Use path parameter format: `PUT /api/folders/\(folderName)`
+- **Status**: ✅ **ALREADY FIXED** - API endpoint was correct in APIClient.swift
+- **Verified**: `PUT /api/folders/{folder_name}` is correctly implemented at line 173
+- **Note**: Board entry was outdated - the fix had already been applied
 
 ### **PRIORITY 2: Fix Automatic Backend Startup**
-- **OCC:** Fix `BackendService.swift` automatic startup issue
-- **Problem**: `swift run` should auto-start backend but doesn't
-- **Current**: Must manually run `python3 main.py`
-- **Expected**: BackendService should handle backend lifecycle automatically
+- **Status**: ✅ **COMPLETED** - Backend now auto-starts on app launch
+- **Changes Made**:
+  - Added auto-start in BackendService.init() with 0.3s delay
+  - Added backup startup trigger in AppDelegate.applicationDidFinishLaunching
+  - Improved findProjectRoot() to better handle `swift run` scenarios
+- **Branch**: `claude/check-boa-016Lnpug3PimnfcpWQacMoJU`
 
 ### **PRIORITY 3: Address Swift Sendable Warnings (Optional)**
-- **OCC:** Fix Sendable protocol warnings in `BackendService.swift`
-- **Lines**: 283, 298, 397, 408 (non-Sendable closure captures)
-- **Impact**: Low priority - compilation warnings only
+- **Status**: ✅ **COMPLETED** - Sendable warnings resolved
+- **Solution**: Added `@MainActor` to BackendService class
+- **Removed**: Redundant `DispatchQueue.main.async` and `MainActor.run` calls
 
-### **Immediate Actions Required**:
-- [ ] **OCC:** Fix API endpoint in frontend (Priority 1)
-- [ ] **OCC:** Fix automatic backend startup (Priority 2)
-- [ ] **OCC:** Optional: Fix Sendable warnings (Priority 3)
+### **File Size Compliance - BackendService**
+- **Status**: ✅ **COMPLIANT** - Split into three files under 300-line limit
+- **BackendService.swift**: 253 lines (core lifecycle)
+- **BackendService+Monitoring.swift**: 187 lines (health monitoring)
+- **BackendService+Utilities.swift**: 116 lines (utility functions)
 
-**Impact**: **HIGH** - "Could not connect to server" errors will be resolved once API endpoints are corrected
+### **Completed Actions**:
+- [x] **OCC:** Fix API endpoint in frontend (Priority 1) - Was already correct
+- [x] **OCC:** Fix automatic backend startup (Priority 2) - DONE
+- [x] **OCC:** Fix Sendable warnings (Priority 3) - DONE
+- [x] **OCC:** BackendService file size compliance - DONE
 
-**TCC Testing Conclusion**: Backend is production-ready. Issues are frontend integration problems, not server stability problems.
+**Remaining**: Other file size violations across codebase still need addressing
+
+**TCC Testing Conclusion**: Backend is production-ready. Frontend integration improvements have been applied.
 
 ---
 
