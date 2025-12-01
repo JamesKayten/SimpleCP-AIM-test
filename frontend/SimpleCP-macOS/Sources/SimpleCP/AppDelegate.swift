@@ -16,6 +16,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         logger.info("🚀 Application finished launching")
+
+        // Start backend immediately on app launch
+        // This ensures backend is ready before any UI appears
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let backendService = AppDelegate.sharedBackendService {
+                if !backendService.isRunning {
+                    self.logger.info("🚀 Starting backend from AppDelegate...")
+                    backendService.startBackend()
+                }
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

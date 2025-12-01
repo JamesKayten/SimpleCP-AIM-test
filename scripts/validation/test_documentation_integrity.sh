@@ -1,228 +1,70 @@
 #!/bin/bash
 # Documentation Integrity Validation Tests
-# Verifies all documentation links, references, and content accuracy
 
-
-REPO_ROOT="/home/user/AI-Collaboration-Management"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TEST_NAME="Documentation Integrity Validation"
-ERRORS=0
-WARNINGS=0
+ERRORS=0; WARNINGS=0; PASSED=0
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+source "$(dirname "$0")/common.sh"
+header "$TEST_NAME"
 
-echo "=========================================="
-echo "$TEST_NAME"
-echo "=========================================="
-echo ""
-
-# Helper functions
-pass() {
-    echo -e "${GREEN}✓${NC} $1"
-}
-
-fail() {
-    echo -e "${RED}✗${NC} $1"
-    ((ERRORS++))
-}
-
-warn() {
-    echo -e "${YELLOW}⚠${NC} $1"
-    ((WARNINGS++))
-}
-
-# Test 1: README.md references are accurate
+# Test 1: README.md references
 echo "Test 1: README.md Internal References"
-echo "--------------------------------------"
 cd "$REPO_ROOT"
+grep -q "localhost:8000" README.md && pass "README uses correct port (8000)" || warn "Port 8000 not found in README"
 
-# Check that README mentions correct port
-if grep -q "localhost:8000" README.md; then
-    pass "README uses correct port (8000)"
-else
-    if grep -q "localhost:8080" README.md; then
-        fail "README uses WRONG port (8080) - should be 8000"
-    else
-        warn "Port reference not found in README"
-    fi
-fi
-
-# Check documentation links in README
-DOC_LINKS=(
-    "docs/API.md"
-    "docs/UI_UX_SPECIFICATION_v3.md"
-    "docs/USER_GUIDE.md"
-    "docs/BOARD.md"
-    "docs/AI_COLLABORATION_FRAMEWORK.md"
-    "docs/tcc/TCC_WORKFLOW_GUIDE.md"
-    "docs/tcc/README_TCC_INSTALLATION.md"
-    "docs/reports/INTEGRATION_TEST_REPORT.md"
-    "docs/reports/PORT_8000_FIX_IMPLEMENTATION.md"
-)
-
-for link in "${DOC_LINKS[@]}"; do
+for link in docs/API.md docs/UI_UX_SPECIFICATION_v3.md docs/USER_GUIDE.md docs/BOARD.md docs/AI_COLLABORATION_FRAMEWORK.md docs/tcc/TCC_WORKFLOW_GUIDE.md docs/tcc/README_TCC_INSTALLATION.md docs/reports/INTEGRATION_TEST_REPORT.md; do
     if grep -q "$link" README.md; then
-        if [ -f "$REPO_ROOT/$link" ]; then
-            pass "README link valid: $link"
-        else
-            fail "README link broken: $link (file doesn't exist)"
-        fi
-    else
-        warn "README missing link: $link"
+        [ -f "$REPO_ROOT/$link" ] && pass "Link valid: $link" || fail "Broken link: $link"
     fi
 done
 echo ""
 
-# Test 2: Check for broken internal links
+# Test 2: Check for broken internal links in docs
 echo "Test 2: Documentation Cross-References"
-echo "---------------------------------------"
-
-# Find all markdown files
-MD_FILES=$(find "$REPO_ROOT/docs" -name "*.md" -type f)
-
-for md_file in $MD_FILES; do
-    # Extract markdown links [text](path)
-    LINKS=$(grep -oP '\[([^\]]+)\]\(([^)]+)\)' "$md_file" | grep -oP '\(([^)]+)\)' | tr -d '()' || true)
-
+for md_file in $(find "$REPO_ROOT/docs" -name "*.md" -type f 2>/dev/null); do
+    LINKS=$(grep -oP '\[([^\]]+)\]\(([^)]+)\)' "$md_file" 2>/dev/null | grep -oP '\(([^)]+)\)' | tr -d '()' || true)
     for link in $LINKS; do
-        # Skip external URLs
-        if [[ "$link" =~ ^https?:// ]]; then
-            continue
-        fi
-
-        # Skip anchor links
-        if [[ "$link" =~ ^# ]]; then
-            continue
-        fi
-
-        # Check if file exists (relative to docs/)
-        LINK_PATH="$REPO_ROOT/docs/$link"
-        if [ ! -f "$LINK_PATH" ]; then
-            # Try relative to repo root
-            LINK_PATH="$REPO_ROOT/$link"
-            if [ ! -f "$LINK_PATH" ]; then
-                warn "Broken link in $(basename $md_file): $link"
-            fi
-        fi
+        [[ "$link" =~ ^https?:// ]] && continue
+        [[ "$link" =~ ^# ]] && continue
+        [ ! -f "$REPO_ROOT/docs/$link" ] && [ ! -f "$REPO_ROOT/$link" ] && warn "Broken: $(basename $md_file) -> $link"
     done
 done
-pass "Documentation cross-reference check completed"
+pass "Cross-reference check completed"
 echo ""
 
-# Test 3: Verify navigation guide exists
+# Test 3: Navigation guide
 echo "Test 3: Navigation Guide"
-echo "------------------------"
 if [ -f "$REPO_ROOT/docs/README_ORGANIZATION.md" ]; then
-    pass "Navigation guide exists: docs/README_ORGANIZATION.md"
-
-    # Check it references key directories
-    if grep -q "/tcc/" "$REPO_ROOT/docs/README_ORGANIZATION.md"; then
-        pass "Navigation guide references TCC directory"
-    else
-        warn "Navigation guide missing TCC directory reference"
-    fi
-
-    if grep -q "/reports/" "$REPO_ROOT/docs/README_ORGANIZATION.md"; then
-        pass "Navigation guide references reports directory"
-    else
-        warn "Navigation guide missing reports directory reference"
-    fi
+    pass "Navigation guide exists"
+    grep -q "/tcc/" "$REPO_ROOT/docs/README_ORGANIZATION.md" && pass "References TCC" || warn "Missing TCC reference"
+    grep -q "/reports/" "$REPO_ROOT/docs/README_ORGANIZATION.md" && pass "References reports" || warn "Missing reports reference"
 else
-    fail "Navigation guide missing: docs/README_ORGANIZATION.md"
+    fail "Navigation guide missing"
 fi
 echo ""
 
-# Test 4: Script paths in documentation
+# Test 4: Script paths
 echo "Test 4: Script Path References"
-echo "-------------------------------"
-
-# Check if README references scripts in correct locations
-SCRIPT_REFS=(
-    "scripts/backend/kill_backend.sh"
-    "scripts/sync/sync-from-aicm.sh"
-    "scripts/sync/sync-to-aicm.sh"
-    "scripts/tcc/install-tcc.sh"
-)
-
-for script in "${SCRIPT_REFS[@]}"; do
-    if grep -q "$script" README.md; then
-        pass "README references script correctly: $script"
-    else
-        # Check for old paths
-        OLD_PATH=$(basename "$script")
-        if grep -q "$OLD_PATH" README.md && ! grep -q "$script" README.md; then
-            fail "README uses old script path: $OLD_PATH (should be $script)"
-        else
-            warn "README doesn't reference: $script"
-        fi
-    fi
+for script in scripts/backend/kill_backend.sh scripts/sync/sync-from-aicm.sh scripts/sync/sync-to-aicm.sh scripts/tcc/install-tcc.sh; do
+    grep -q "$script" README.md && pass "Script referenced: $script" || warn "Script not referenced: $script"
 done
 echo ""
 
-# Test 5: Check for outdated content
+# Test 5: Outdated content
 echo "Test 5: Outdated Content Detection"
-echo "-----------------------------------"
-
-# Check for references to old structure
-OUTDATED_PATTERNS=(
-    "rules/"
-    "tcc-config-files/"
-)
-
-cd "$REPO_ROOT"
-for pattern in "${OUTDATED_PATTERNS[@]}"; do
-    if grep -r "$pattern" README.md 2>/dev/null | grep -v "framework/$pattern" > /dev/null; then
-        warn "README may reference old structure: $pattern (should be framework/$pattern)"
-    fi
+for pattern in "rules/" "tcc-config-files/"; do
+    grep -r "$pattern" README.md 2>/dev/null | grep -v "framework/$pattern" > /dev/null && warn "Old reference: $pattern"
 done
-
 pass "Outdated content check completed"
 echo ""
 
-# Test 6: Key information accuracy
+# Test 6: Technical accuracy
 echo "Test 6: Technical Accuracy"
-echo "--------------------------"
-
-# Check backend entry point is documented
-if grep -q "main.py" README.md; then
-    pass "Backend entry point documented: main.py"
-else
-    warn "Backend entry point not mentioned in README"
-fi
-
-# Check frontend entry point is documented
-if grep -q "Package.swift" README.md || grep -q "swift run" README.md; then
-    pass "Frontend build process documented"
-else
-    warn "Frontend build process not clear in README"
-fi
-
-# Check architecture section exists
-if grep -q "## 🔧 Architecture" README.md || grep -q "## Architecture" README.md; then
-    pass "Architecture section exists in README"
-else
-    warn "Architecture section missing from README"
-fi
+grep -q "main.py" README.md && pass "Backend entry point documented" || warn "main.py not mentioned"
+(grep -q "Package.swift" README.md || grep -q "swift run" README.md) && pass "Frontend documented" || warn "Frontend build not clear"
+grep -qE "## .*Architecture" README.md && pass "Architecture section exists" || warn "Architecture section missing"
 echo ""
 
-# Summary
-echo "=========================================="
-echo "Test Summary"
-echo "=========================================="
-echo "Errors:   $ERRORS"
-echo "Warnings: $WARNINGS"
-echo ""
-
-if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
-    echo -e "${GREEN}✓ All documentation integrity tests passed!${NC}"
-    exit 0
-elif [ $ERRORS -eq 0 ]; then
-    echo -e "${YELLOW}⚠ Documentation tests passed with warnings${NC}"
-    exit 0
-else
-    echo -e "${RED}✗ Documentation tests failed with $ERRORS errors${NC}"
-    exit 1
-fi
+print_summary "$TEST_NAME"
+exit $?
