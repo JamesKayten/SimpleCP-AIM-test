@@ -15,7 +15,8 @@ struct SimpleCPApp: App {
     @State private var showSettings = false
 
     init() {
-        // Note: Can't access @StateObject in init, will set up in .task modifier
+        // Note: Can't access @StateObject in init
+        // The backendService will be shared via AppDelegate after first body evaluation
     }
 
     var body: some Scene {
