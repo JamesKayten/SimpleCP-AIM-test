@@ -2,9 +2,9 @@
 # Repository Structure Validation Tests
 # Tests that the repository organization is correct and complete
 
-
-REPO_ROOT="/home/user/AI-Collaboration-Management"
-TEST_NAME="Repository Structure Validation (AICM)"
+# Use relative paths - detect repo root from script location
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+TEST_NAME="Repository Structure Validation"
 ERRORS=0
 WARNINGS=0
 

@@ -2,9 +2,10 @@
 # Git Status and Sync Validation Tests
 # Verifies git status, commits, and AICM sync functionality
 
-
-REPO_ROOT="/home/user/AI-Collaboration-Management"
-SIMPLECP_ROOT="/home/user/SimpleCP"
+# Use relative paths - detect repo root from script location
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SIMPLECP_ROOT="$REPO_ROOT"
+AICM_ROOT="${AICM_ROOT:-}"  # Optional AICM integration path (can be empty)
 TEST_NAME="Git Status & Sync Validation"
 ERRORS=0
 WARNINGS=0

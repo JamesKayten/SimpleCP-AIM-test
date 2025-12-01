@@ -1,9 +1,10 @@
 #!/bin/bash
 # AICM REPOSITORY COMMAND
 # Usage: ~/aicm [command] [options]
-# Ensures Claude stays in AICM repository and work doesn't leak elsewhere
+# Ensures Claude stays in current repository and work doesn't leak elsewhere
 
-AICM_REPO_PATH="/Volumes/User_Smallfavor/Users/Smallfavor/Documents/AI-Collaboration-Management"
+# Use environment variable or current working directory
+AICM_REPO_PATH="${AICM_REPO_PATH:-$(pwd)}"
 
 # AICM repository validation function - ensures Claude stays in AICM repo
 validate_aicm_repository() {

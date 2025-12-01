@@ -2,7 +2,8 @@
 # AICM Framework Validation - Master Test Runner
 # Runs all validation tests and generates comprehensive report
 
-REPO_ROOT="/home/user/AI-Collaboration-Management"
+# Use current directory as repo root (relative paths)
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SCRIPT_DIR="$REPO_ROOT/scripts/validation"
 REPORT_FILE="$REPO_ROOT/VALIDATION_REPORT.md"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')

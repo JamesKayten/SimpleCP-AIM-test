@@ -2,8 +2,8 @@
 # Documentation Integrity Validation Tests
 # Verifies all documentation links, references, and content accuracy
 
-
-REPO_ROOT="/home/user/AI-Collaboration-Management"
+# Use relative paths - detect repo root from script location
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TEST_NAME="Documentation Integrity Validation"
 ERRORS=0
 WARNINGS=0
