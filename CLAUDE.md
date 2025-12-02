@@ -42,3 +42,23 @@ When starting a session, check `docs/BOARD.md` for:
 - Tasks assigned to your role
 - Pending branches to process
 - Status of recent work
+
+---
+
+## Pattern Propagation Rule
+
+When fixing ANY pattern (paths, APIs, configs):
+1. `grep -rn "<pattern>" .` to find ALL instances
+2. Fix ALL occurrences, not just the one encountered
+3. If pattern came from AIM init, fix the SOURCE TEMPLATE
+
+### Common Patterns to Check:
+- Hardcoded paths: `/home/user`, `/Users/`, `/Volumes/`
+- Project names: `SimpleCP`, `AI-Collaboration-Management`
+- Absolute paths that should be relative
+
+### Standard Path Detection (use in ALL shell scripts):
+```bash
+# Use relative paths - detect repo root from script location
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+```
