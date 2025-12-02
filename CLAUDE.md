@@ -45,20 +45,40 @@ When starting a session, check `docs/BOARD.md` for:
 
 ---
 
-## Pattern Propagation Rule
+## MANDATORY: Pattern Propagation Rule
 
-When fixing ANY pattern (paths, APIs, configs):
-1. `grep -rn "<pattern>" .` to find ALL instances
-2. Fix ALL occurrences, not just the one encountered
-3. If pattern came from AIM init, fix the SOURCE TEMPLATE
+**BEFORE fixing ANY pattern (paths, APIs, configs, names):**
 
-### Common Patterns to Check:
-- Hardcoded paths: `/home/user`, `/Users/`, `/Volumes/`
-- Project names: `SimpleCP`, `AI-Collaboration-Management`
-- Absolute paths that should be relative
+### 1. COMPREHENSIVE SEARCH (MANDATORY)
+```bash
+grep -rn "<pattern>" --include="*.sh" --include="*.py" --include="*.swift" --include="*.md" .
+```
+
+### 2. SYSTEMATIC FIX (ALL OR NONE)
+- List ALL files containing the pattern
+- Fix ALL occurrences, never just the one encountered
+- Test ALL affected functionality
+- Update related documentation
+
+### 3. SOURCE TEMPLATE CHECK (MANDATORY)
+- If pattern came from `aim init`, fix the AIM framework source templates
+- Prevent future propagation of the issue
+
+### 4. VALIDATION (MANDATORY)
+- Search again to confirm ZERO remaining instances
+- Use `/fix-pattern` command for systematic approach
+
+### Common Patterns Requiring Full Propagation:
+- **Hardcoded paths:** `/home/user`, `/Users/`, `/Volumes/`
+- **Project names:** Hardcoded references to specific projects
+- **Absolute paths:** Should be relative with dynamic detection
+- **API changes:** Endpoint updates, authentication changes
+- **Config keys:** Renamed or restructured configuration
 
 ### Standard Path Detection (use in ALL shell scripts):
 ```bash
 # Use relative paths - detect repo root from script location
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 ```
+
+**RULE: Partial fixes create technical debt. Fix the pattern completely or don't fix it at all.**
