@@ -11,7 +11,7 @@ struct ContentView: View {
     @EnvironmentObject var clipboardManager: ClipboardManager
     @EnvironmentObject var backendService: BackendService
     @State private var searchText = ""
-    @State private var showSaveSnippetDialog = false
+    @State fileprivate var showSaveSnippetDialog = false
     @State private var selectedClipForSave: ClipItem?
     @State private var showCreateFolderSheet = false
     @State private var newFolderName = ""
