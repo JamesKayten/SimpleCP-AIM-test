@@ -70,3 +70,5 @@ htmlcov/
 .tox/
 *.cover
 .hypothesis/
+# Claude Code local settings (machine-specific)
+.claude/settings.json
