@@ -23,6 +23,8 @@ struct SettingsWindow: View {
     @AppStorage("showFolderIcons") private var showFolderIcons = true
     @AppStorage("animateFolderExpand") private var animateFolderExpand = true
     @AppStorage("showSnippetPreviews") private var showSnippetPreviews = false
+    @AppStorage("apiHost") private var apiHost = "localhost"
+    @AppStorage("apiPort") private var apiPort = 8000
 
     enum Tab {
         case general, appearance, clips, snippets
@@ -80,7 +82,9 @@ struct SettingsWindow: View {
                             launchAtLogin: $launchAtLogin,
                             startMinimized: $startMinimized,
                             windowPosition: $windowPosition,
-                            windowSize: $windowSize
+                            windowSize: $windowSize,
+                            apiHost: $apiHost,
+                            apiPort: $apiPort
                         )
                     case .appearance:
                         AppearanceSettingsView(

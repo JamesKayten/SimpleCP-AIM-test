@@ -7,6 +7,8 @@ struct GeneralSettingsView: View {
     @Binding var startMinimized: Bool
     @Binding var windowPosition: String
     @Binding var windowSize: String
+    @Binding var apiHost: String
+    @Binding var apiPort: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -43,6 +45,30 @@ struct GeneralSettingsView: View {
                         }
                         .pickerStyle(.radioGroup)
                     }
+                }
+                .padding(.vertical, 8)
+            }
+
+            // API Configuration
+            GroupBox(label: Text("Backend API")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Host:")
+                        TextField("localhost", text: $apiHost)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 150)
+                    }
+
+                    HStack {
+                        Text("Port:")
+                        TextField("8000", value: $apiPort, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 100)
+                    }
+
+                    Text("Restart required after changes")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 8)
             }

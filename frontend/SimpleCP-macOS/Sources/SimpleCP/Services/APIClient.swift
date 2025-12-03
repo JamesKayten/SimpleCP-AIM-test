@@ -43,8 +43,16 @@ class APIClient {
     let maxRetryDelay: TimeInterval = 8.0
     let retryMultiplier: Double = 2.0
 
-    init(baseURL: String = "http://localhost:8000") {
-        self.baseURL = baseURL
+    init(baseURL: String? = nil) {
+        if let baseURL = baseURL {
+            self.baseURL = baseURL
+        } else {
+            // Use configurable host and port with sensible defaults
+            let host = UserDefaults.standard.string(forKey: "apiHost") ?? "localhost"
+            let port = UserDefaults.standard.integer(forKey: "apiPort")
+            let apiPort = port > 0 ? port : 8000
+            self.baseURL = "http://\(host):\(apiPort)"
+        }
     }
 
     // MARK: - Retry Logic
