@@ -23,6 +23,7 @@ class ClipboardManager: ObservableObject {
     let maxHistorySize: Int = 50
     let userDefaults = UserDefaults.standard
     let logger = Logger(subsystem: "com.simplecp.app", category: "clipboard")
+    private var ignoreNextChange: Bool = false
 
     // Storage keys
     let historyKey = "clipboardHistory"
@@ -32,8 +33,28 @@ class ClipboardManager: ObservableObject {
     init() {
         loadData()
         startMonitoring()
-        // CRITICAL FIX: Sync with backend on startup
-        syncWithBackend()
+        // Delay initial sync to allow backend to fully start
+        // Backend needs time to: start (0.3s) + process launch (1s) + warmup (~1-2s)
+        Task {
+            // Wait for backend to be ready (up to 5 seconds)
+            for attempt in 1...10 {
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                
+                // Try a quick health check
+                if let url = URL(string: "http://localhost:8000/health"),
+                   let (_, response) = try? await URLSession.shared.data(from: url),
+                   let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    logger.info("🟢 Backend ready after \(Double(attempt) * 0.5)s, starting sync...")
+                    await syncWithBackendAsync()
+                    return
+                }
+            }
+            
+            // If we couldn't connect after 5 seconds, sync anyway (will retry with exponential backoff)
+            logger.warning("⚠️ Backend not responding after 5s, syncing anyway (will retry)...")
+            await syncWithBackendAsync()
+        }
     }
 
     // MARK: - Clipboard Monitoring
@@ -125,6 +146,13 @@ class ClipboardManager: ObservableObject {
 
         lastChangeCount = pasteboard.changeCount
 
+        // Skip if we're ignoring programmatic changes
+        if ignoreNextChange {
+            ignoreNextChange = false
+            logger.debug("📋 Ignoring programmatic clipboard change")
+            return
+        }
+
         if let content = pasteboard.string(forType: .string), !content.isEmpty {
             currentClipboard = content
             addToHistory(content: content)
@@ -173,6 +201,7 @@ class ClipboardManager: ObservableObject {
     }
 
     func copyToClipboard(_ content: String) {
+        ignoreNextChange = true
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(content, forType: .string)

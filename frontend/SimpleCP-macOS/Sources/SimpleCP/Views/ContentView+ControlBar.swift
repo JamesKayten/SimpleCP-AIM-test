@@ -14,7 +14,11 @@ extension ContentView {
         HStack(spacing: 12) {
             Button(action: {
                 print("Save snippet button clicked")
-                showSaveSnippetDialog = true
+                SaveSnippetWindowManager.shared.showDialog(
+                    content: clipboardManager.currentClipboard,
+                    clipboardManager: clipboardManager,
+                    onDismiss: {}
+                )
             }) {
                 Label("Save as Snippet", systemImage: "square.and.arrow.down")
                     .font(.system(size: 11))
@@ -46,8 +50,11 @@ extension ContentView {
                     } else {
                         ForEach(clipboardManager.folders) { folder in
                             Button("\(folder.icon) \(folder.name)") {
-                                renameFolderNewName = folder.name
-                                folderToRename = folder
+                                RenameFolderWindowManager.shared.showDialog(
+                                    folder: folder,
+                                    clipboardManager: clipboardManager,
+                                    onDismiss: {}
+                                )
                             }
                         }
                     }
@@ -124,7 +131,7 @@ extension ContentView {
         }
 
         // Create the folder immediately without any dialog
-        clipboardManager.createFolder(name: proposedName)
+        _ = clipboardManager.createFolder(name: proposedName)
         print("✅ Auto-created folder: \(proposedName)")
     }
 

@@ -69,7 +69,9 @@ extension APIClient {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.timeoutInterval = 10.0
 
-            var body: [String: Any] = [:]
+            var body: [String: Any] = [
+                "clip_id": clipId  // Backend requires clip_id in the body
+            ]
             if let content = content { body["content"] = content }
             if let name = name { body["name"] = name }
             if let tags = tags { body["tags"] = tags }

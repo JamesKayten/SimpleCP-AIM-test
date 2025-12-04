@@ -136,6 +136,8 @@ class ClipboardManager:
         return self.snippet_store.get_all_snippets()
 
     def add_snippet_direct(self, content: str, name: str, folder: str, tags: Optional[List[str]] = None) -> ClipboardItem:
+        if not content or not content.strip():
+            raise ValueError("Content cannot be empty")
         snippet = ClipboardItem(content=content)
         snippet.make_snippet(name, folder, tags)
         self.snippet_store.add_snippet(folder, snippet)

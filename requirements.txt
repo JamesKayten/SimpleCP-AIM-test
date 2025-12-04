@@ -1,0 +1,9 @@
+pyperclip
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sentry-sdk[fastapi]
+python-json-logger
+python-dotenv
+requests

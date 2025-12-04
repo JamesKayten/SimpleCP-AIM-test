@@ -8,9 +8,17 @@
 import Foundation
 import os.log
 
+struct BackendStartupConfig {
+    let projectRoot: URL
+    let backendPath: URL
+    let mainPyPath: URL
+    let python3Path: String
+}
+
 @MainActor
 class BackendService: ObservableObject {
     @Published var isRunning: Bool = false
+    @Published var isReady: Bool = false  // New: Tracks if backend is ready for API calls
     @Published var backendError: String?
     @Published var restartCount: Int = 0
     @Published var isMonitoring: Bool = false
@@ -104,20 +112,53 @@ class BackendService: ObservableObject {
             logger.info("Backend already running")
             return
         }
-
+        
         if isPortInUse(port) {
-            logger.warning("Port \(self.port) is already in use. Attempting to free it...")
-            if !killProcessOnPort(self.port) {
-                self.backendError = "Port \(self.port) is in use and couldn't be freed."
-                logger.error("Failed to start backend: port conflict")
-                return
-            }
+            handlePortOccupied()
+            return
         }
 
+        guard let startupConfig = validateStartupEnvironment() else {
+            return
+        }
+        
+        startBackendProcess(config: startupConfig)
+    }
+
+    func handlePortOccupied() {
+        logger.warning("Port \(self.port) is already in use.")
+        
+        // Try to connect to the existing backend
+        Task {
+            let url = URL(string: "http://localhost:\(port)/health")!
+            do {
+                let (_, response) = try await URLSession.shared.data(from: url)
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    await MainActor.run {
+                        logger.info("✅ Existing backend on port \(self.port) is healthy, using it")
+                        isRunning = true
+                        isReady = true
+                        backendError = nil
+                        startHealthChecks()
+                    }
+                    return
+                }
+            } catch {
+                logger.warning("❌ Port occupied but backend not responding, may need manual cleanup")
+            }
+            
+            await MainActor.run {
+                backendError = "Backend port \(self.port) is occupied by unresponsive process. " +
+                    "Please kill the process manually: lsof -ti:\(self.port) | xargs kill -9"
+            }
+        }
+    }
+
+    func validateStartupEnvironment() -> BackendStartupConfig? {
         guard let projectRoot = findProjectRoot() else {
             backendError = "Could not find project root directory"
             logger.error("Failed to find project root")
-            return
+            return nil
         }
 
         let backendPath = projectRoot.appendingPathComponent("backend")
@@ -126,53 +167,53 @@ class BackendService: ObservableObject {
         guard FileManager.default.fileExists(atPath: mainPyPath.path) else {
             backendError = "Backend not found at: \(mainPyPath.path)"
             logger.error("Backend main.py not found")
-            return
+            return nil
         }
 
         guard let python3Path = findPython3() else {
             backendError = "Python 3 not found. Please install Python 3."
             logger.error("Python 3 not found")
-            return
+            return nil
         }
 
+        return BackendStartupConfig(
+            projectRoot: projectRoot,
+            backendPath: backendPath,
+            mainPyPath: mainPyPath,
+            python3Path: python3Path
+        )
+    }
+
+    func startBackendProcess(config: BackendStartupConfig) {
         logger.info("Starting backend...")
-        logger.info("   Python: \(python3Path)")
-        logger.info("   Backend: \(mainPyPath.path)")
+        logger.info("   Python: \(config.python3Path)")
+        logger.info("   Backend: \(config.mainPyPath.path)")
 
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: python3Path)
-        process.arguments = [mainPyPath.path]
-        process.currentDirectoryURL = backendPath
+        process.executableURL = URL(fileURLWithPath: config.python3Path)
+        process.arguments = [config.mainPyPath.path]
+        process.currentDirectoryURL = config.backendPath
 
         var environment = ProcessInfo.processInfo.environment
         environment["PYTHONUNBUFFERED"] = "1"
         process.environment = environment
 
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        outputPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            if !data.isEmpty, let output = String(data: data, encoding: .utf8) {
-                self?.logger.debug("Backend stdout: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
-            }
-        }
-
-        errorPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            if !data.isEmpty, let output = String(data: data, encoding: .utf8) {
-                self?.logger.error("Backend stderr: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
-            }
-        }
+        setupProcessPipes(process: process)
 
         process.terminationHandler = { [weak self] terminatedProcess in
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
-                self.isRunning = false
-                self.backendProcess = nil
-                self.logger.info("Backend process terminated (exit code: \(terminatedProcess.terminationStatus))")
+                
+                // Only mark as not running if this is still our current process
+                if self.backendProcess === terminatedProcess {
+                    self.isRunning = false
+                    self.isReady = false
+                    self.backendProcess = nil
+                    self.logger.info("Backend process terminated (exit code: \(terminatedProcess.terminationStatus))")
+                } else {
+                    self.logger.info("Old backend process terminated (exit code: \(terminatedProcess.terminationStatus)), but a new one is already running")
+                }
+                
                 try? FileManager.default.removeItem(atPath: self.pidFilePath)
             }
         }
@@ -199,14 +240,37 @@ class BackendService: ObservableObject {
         }
     }
 
+    private func setupProcessPipes(process: Process) {
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+
+        outputPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            if !data.isEmpty, let output = String(data: data, encoding: .utf8) {
+                self?.logger.debug("Backend stdout: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+            }
+        }
+
+        errorPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            if !data.isEmpty, let output = String(data: data, encoding: .utf8) {
+                self?.logger.error("Backend stderr: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+            }
+        }
+    }
+
     func stopBackend() {
         guard let process = backendProcess, process.isRunning else {
             logger.info("Backend not running")
             isRunning = false
+            isReady = false
             return
         }
 
         logger.info("Stopping backend...")
+        isReady = false  // Backend is no longer ready
         process.terminate()
 
         let deadline = Date().addingTimeInterval(2.0)
@@ -246,8 +310,15 @@ class BackendService: ObservableObject {
         startBackend()
     }
 
-    deinit {
-        cleanupTimers()
-        cleanupProcess()
+    nonisolated deinit {
+        // Note: Cannot call main actor-isolated methods from deinit
+        // Cleanup is handled by stopBackend() which should be called before deallocation
+        // If process is still running, force terminate it
+        if let process = backendProcess, process.isRunning {
+            process.terminate()
+        }
+        
+        // Invalidate timers on their creation thread
+        // Timers should be invalidated before the service is deallocated
     }
 }

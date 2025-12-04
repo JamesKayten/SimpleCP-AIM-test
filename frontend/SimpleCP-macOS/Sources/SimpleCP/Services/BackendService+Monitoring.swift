@@ -16,24 +16,33 @@ extension BackendService {
             let (_, response) = try await URLSession.shared.data(from: url)
 
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                logger.info("Backend health check passed")
-                self.consecutiveFailures = 0
-                self.backendError = nil
+                await MainActor.run {
+                    logger.info("Backend health check passed")
+                    self.consecutiveFailures = 0
+                    self.backendError = nil
+                    self.isReady = true  // Backend is now ready for API calls
+                }
             } else {
                 logger.warning("Backend health check returned unexpected response")
+                await MainActor.run {
+                    self.isReady = false
+                }
                 handleHealthCheckFailure()
             }
         } catch {
             logger.error("Backend health check failed: \(error.localizedDescription)")
+            await MainActor.run {
+                self.isReady = false
+            }
             handleHealthCheckFailure()
         }
     }
 
     func handleHealthCheckFailure() {
-        consecutiveFailures += 1
-        logger.warning("Health check failure #\(consecutiveFailures)")
+        self.consecutiveFailures += 1
+        logger.warning("Health check failure #\(self.consecutiveFailures)")
 
-        if consecutiveFailures >= 3 && autoRestartEnabled {
+        if self.consecutiveFailures >= 3 && self.autoRestartEnabled {
             logger.error("Multiple health check failures detected, triggering restart")
             triggerAutoRestart(reason: "Health check failures")
         }
@@ -48,7 +57,9 @@ extension BackendService {
         isMonitoring = true
 
         monitoringTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-            self?.checkBackendStatus()
+            Task { @MainActor in
+                self?.checkBackendStatus()
+            }
         }
 
         startHealthChecks()
@@ -79,9 +90,30 @@ extension BackendService {
         guard let process = backendProcess else {
             if isRunning {
                 logger.warning("Backend marked as running but process is nil")
-                isRunning = false
-                if autoRestartEnabled {
-                    triggerAutoRestart(reason: "Process lost")
+                
+                // Check if a backend is actually running on the port before restarting
+                if isPortInUse(port) {
+                    logger.info("Port \(self.port) is in use, checking if backend is healthy...")
+                    Task {
+                        await verifyBackendHealth()
+                        await MainActor.run {
+                            if self.isReady {
+                                logger.info("Backend is healthy despite missing process reference, continuing...")
+                                return
+                            } else {
+                                logger.warning("Backend on port \(self.port) is unhealthy, marking as not running")
+                                self.isRunning = false
+                                if self.autoRestartEnabled {
+                                    self.triggerAutoRestart(reason: "Process lost")
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    isRunning = false
+                    if autoRestartEnabled {
+                        triggerAutoRestart(reason: "Process lost")
+                    }
                 }
             }
             return
@@ -133,9 +165,9 @@ extension BackendService {
         }
 
         guard restartCount < maxRestartAttempts else {
-            logger.error("Maximum restart attempts (\(maxRestartAttempts)) reached, disabling auto-restart")
+            logger.error("Maximum restart attempts (\(self.maxRestartAttempts)) reached, disabling auto-restart")
             autoRestartEnabled = false
-            backendError = "Backend failed to restart after \(maxRestartAttempts) attempts. Please check logs."
+            backendError = "Backend failed to restart after \(self.maxRestartAttempts) attempts. Please check logs."
             return
         }
 
@@ -157,14 +189,14 @@ extension BackendService {
     }
 
     func performAutoRestart(reason: String) {
-        restartCount += 1
-        lastRestartTime = Date()
+        self.restartCount += 1
+        self.lastRestartTime = Date()
 
-        restartDelay = min(restartDelay * 2, 30.0)
+        self.restartDelay = min(self.restartDelay * 2, 30.0)
 
-        logger.info("Auto-restarting backend (attempt \(restartCount)/\(maxRestartAttempts)) - Reason: \(reason)")
+        logger.info("Auto-restarting backend (attempt \(self.restartCount)/\(self.maxRestartAttempts)) - Reason: \(reason)")
 
-        stopBackend()
+        self.stopBackend()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.startBackend()

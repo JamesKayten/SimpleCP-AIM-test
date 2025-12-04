@@ -10,60 +10,49 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var clipboardManager: ClipboardManager
     @EnvironmentObject var backendService: BackendService
+    @Environment(\.openWindow) private var openWindow
     @State private var searchText = ""
-    @State fileprivate var showSaveSnippetDialog = false
     @State private var selectedClipForSave: ClipItem?
-    @State private var showCreateFolderSheet = false
-    @State private var newFolderName = ""
-    @State private var showRenameFolderPicker = false
-    @State fileprivate var folderToRename: SnippetFolder?
-    @State fileprivate var renameFolderNewName = ""
     @State private var selectedFolderId: UUID?
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header Bar
-            headerBar
+        ZStack {
+            // Main content
+            VStack(spacing: 0) {
+                // Header Bar
+                headerBar
 
-            // Search Bar
-            searchBar
+                // Search Bar
+                searchBar
 
-            // Control Bar
-            controlBar
+                // Control Bar
+                controlBar
 
-            Divider()
+                Divider()
 
-            // Two-Column Layout
-            HSplitView {
-                // Left Column: Recent Clips
-                RecentClipsColumn(
-                    searchText: searchText,
-                    onSaveAsSnippet: { clip in
-                        selectedClipForSave = clip
-                        showSaveSnippetDialog = true
-                    }
-                )
-                .frame(minWidth: 250, idealWidth: 300)
-
-                // Right Column: Saved Snippets
-                SavedSnippetsColumn(searchText: searchText, selectedFolderId: $selectedFolderId)
+                // Two-Column Layout
+                HSplitView {
+                    // Left Column: Recent Clips
+                    RecentClipsColumn(
+                        searchText: searchText,
+                        onSaveAsSnippet: { clip in
+                            selectedClipForSave = clip
+                            SaveSnippetWindowManager.shared.showDialog(
+                                content: clip.content,
+                                clipboardManager: clipboardManager,
+                                onDismiss: {
+                                    selectedClipForSave = nil
+                                }
+                            )
+                        }
+                    )
                     .frame(minWidth: 250, idealWidth: 300)
-            }
-        }
-        .focusable()
-        .sheet(isPresented: $showSaveSnippetDialog) {
-            SaveSnippetDialog(
-                isPresented: $showSaveSnippetDialog,
-                content: selectedClipForSave?.content ?? clipboardManager.currentClipboard
-            )
-            .environmentObject(clipboardManager)
-        }
-        .sheet(item: $folderToRename) { folder in
-            RenameFolderDialog(folder: folder, newName: $renameFolderNewName)
-                .environmentObject(clipboardManager)
-                .onDisappear {
-                    folderToRename = nil
+
+                    // Right Column: Saved Snippets
+                    SavedSnippetsColumn(searchText: searchText, selectedFolderId: $selectedFolderId)
+                        .frame(minWidth: 250, idealWidth: 300)
                 }
+            }
         }
         // Error alert for clipboard manager errors
         .alert("Error", isPresented: $clipboardManager.showError, presenting: clipboardManager.lastError) { error in
@@ -100,7 +89,7 @@ struct ContentView: View {
             Spacer()
 
             Button(action: {
-                print("Settings button clicked - TODO: implement settings")
+                openSettingsWindow()
             }) {
                 Image(systemName: "gearshape.fill")
                     .foregroundColor(.secondary)
@@ -147,6 +136,27 @@ struct ContentView: View {
         .cornerRadius(6)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
+    }
+    
+    // MARK: - Settings
+    
+    private func openSettingsWindow() {
+        // Direct AppKit approach to open settings window
+        for window in NSApp.windows {
+            if window.title == "Settings" {
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+                return
+            }
+        }
+        
+        // If window doesn't exist, try SwiftUI approach
+        openWindow(id: "settings")
+        
+        // Give it a moment, then activate
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 }
 

@@ -11,7 +11,16 @@ extension BackendService {
     // MARK: - Project Discovery
 
     func findProjectRoot() -> URL? {
-        // Priority 1: Check environment variable (set by development tools)
+        // Priority 1: Hardcoded path for development (most reliable for Xcode)
+        let devPath = "/Volumes/User_Smallfavor/Users/Smallfavor/Code/ACTIVE/simple-cp-test"
+        let devURL = URL(fileURLWithPath: devPath)
+        let devBackend = devURL.appendingPathComponent("backend")
+        if FileManager.default.fileExists(atPath: devBackend.path) {
+            logger.info("Found project root via dev path: \(devPath)")
+            return devURL
+        }
+
+        // Priority 2: Check environment variable (set by development tools)
         if let projectDir = ProcessInfo.processInfo.environment["PROJECT_DIR"],
            !projectDir.isEmpty {
             let url = URL(fileURLWithPath: projectDir)
@@ -22,7 +31,7 @@ extension BackendService {
             }
         }
 
-        // Priority 2: Check current working directory (common for swift run)
+        // Priority 3: Check current working directory (common for swift run)
         let cwdPath = FileManager.default.currentDirectoryPath
         let cwdURL = URL(fileURLWithPath: cwdPath)
         let cwdBackend = cwdURL.appendingPathComponent("backend")
@@ -31,7 +40,7 @@ extension BackendService {
             return cwdURL
         }
 
-        // Priority 3: Walk up from current directory (for swift run from subdirectory)
+        // Priority 4: Walk up from current directory (for swift run from subdirectory)
         var walkURL = cwdURL
         for _ in 0..<5 {
             let backendURL = walkURL.appendingPathComponent("backend")
@@ -42,7 +51,7 @@ extension BackendService {
             walkURL = walkURL.deletingLastPathComponent()
         }
 
-        // Priority 4: Start from bundle and walk up (for built app)
+        // Priority 5: Start from bundle and walk up (for built app)
         var currentURL = Bundle.main.bundleURL
         for _ in 0..<10 {
             let backendURL = currentURL.appendingPathComponent("backend")
@@ -60,6 +69,16 @@ extension BackendService {
     // MARK: - Python Discovery
 
     func findPython3() -> String? {
+        // Priority 1: Check for venv Python in project
+        if let projectRoot = findProjectRoot() {
+            let venvPython = projectRoot.appendingPathComponent(".venv/bin/python3")
+            if FileManager.default.fileExists(atPath: venvPython.path) {
+                logger.info("Found venv Python: \(venvPython.path)")
+                return venvPython.path
+            }
+        }
+
+        // Priority 2: System Python paths
         let possiblePaths = [
             "/usr/bin/python3",
             "/usr/local/bin/python3",
@@ -73,7 +92,7 @@ extension BackendService {
             }
         }
 
-        // Try using 'which' command
+        // Priority 3: Try using 'which' command
         let task = Process()
         task.launchPath = "/usr/bin/which"
         task.arguments = ["python3"]

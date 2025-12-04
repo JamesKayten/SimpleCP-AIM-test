@@ -16,9 +16,6 @@ struct FolderView: View {
 
     @Binding var hoveredSnippetId: UUID?
     @Binding var editingSnippetId: UUID?
-    @Binding var editingSnippet: Snippet?
-    @Binding var renamingFolder: SnippetFolder?
-    @Binding var newFolderName: String
 
     let onSelect: () -> Void
 
@@ -72,8 +69,11 @@ struct FolderView: View {
             }
             .contextMenu {
                 Button("Rename Folder...") {
-                    newFolderName = folder.name
-                    renamingFolder = folder
+                    RenameFolderWindowManager.shared.showDialog(
+                        folder: folder,
+                        clipboardManager: clipboardManager,
+                        onDismiss: {}
+                    )
                 }
                 Button("Change Icon...") {
                     changeIcon()
@@ -94,7 +94,11 @@ struct FolderView: View {
                             clipboardManager.copyToClipboard(snippet.content)
                         },
                         onEdit: {
-                            editingSnippet = snippet
+                            EditSnippetWindowManager.shared.showDialog(
+                                snippet: snippet,
+                                clipboardManager: clipboardManager,
+                                onDismiss: {}
+                            )
                         },
                         onDelete: {
                             clipboardManager.deleteSnippet(snippet)
@@ -108,7 +112,11 @@ struct FolderView: View {
                             clipboardManager.copyToClipboard(snippet.content)
                         }
                         Button("Edit...") {
-                            editingSnippet = snippet
+                            EditSnippetWindowManager.shared.showDialog(
+                                snippet: snippet,
+                                clipboardManager: clipboardManager,
+                                onDismiss: {}
+                            )
                         }
                         Button("Duplicate") {
                             duplicateSnippet(snippet)

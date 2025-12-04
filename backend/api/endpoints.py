@@ -80,6 +80,10 @@ def create_router(clipboard_manager):
         """Create snippet from history or directly."""
         if request.clip_id:
             # Convert from history
+            if not request.clip_id.strip():
+                raise HTTPException(
+                    status_code=400, detail="clip_id cannot be empty"
+                )
             snippet = clipboard_manager.save_as_snippet(
                 request.clip_id, request.name, request.folder, request.tags
             )
@@ -87,9 +91,16 @@ def create_router(clipboard_manager):
                 raise HTTPException(status_code=404, detail="History item not found")
         elif request.content:
             # Create directly
-            snippet = clipboard_manager.add_snippet_direct(
-                request.content, request.name, request.folder, request.tags
-            )
+            if not request.content.strip():
+                raise HTTPException(
+                    status_code=400, detail="content cannot be empty"
+                )
+            try:
+                snippet = clipboard_manager.add_snippet_direct(
+                    request.content, request.name, request.folder, request.tags
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
         else:
             raise HTTPException(
                 status_code=400, detail="Either clip_id or content required"

@@ -14,9 +14,6 @@ struct SavedSnippetsColumn: View {
 
     @State private var hoveredSnippetId: UUID?
     @State private var editingSnippetId: UUID?
-    @State private var editingSnippet: Snippet?
-    @State private var renamingFolder: SnippetFolder?
-    @State private var newFolderName: String = ""
 
     private var filteredSnippets: [Snippet] {
         if searchText.isEmpty {
@@ -58,9 +55,6 @@ struct SavedSnippetsColumn: View {
                             isSelected: selectedFolderId == folder.id,
                             hoveredSnippetId: $hoveredSnippetId,
                             editingSnippetId: $editingSnippetId,
-                            editingSnippet: $editingSnippet,
-                            renamingFolder: $renamingFolder,
-                            newFolderName: $newFolderName,
                             onSelect: {
                                 selectedFolderId = folder.id
                             }
@@ -69,14 +63,6 @@ struct SavedSnippetsColumn: View {
                 }
                 .padding(.vertical, 4)
             }
-        }
-        .sheet(item: $editingSnippet) { snippet in
-            EditSnippetDialog(snippet: snippet)
-                .environmentObject(clipboardManager)
-        }
-        .sheet(item: $renamingFolder) { folder in
-            RenameFolderDialog(folder: folder, newName: $newFolderName)
-                .environmentObject(clipboardManager)
         }
     }
 

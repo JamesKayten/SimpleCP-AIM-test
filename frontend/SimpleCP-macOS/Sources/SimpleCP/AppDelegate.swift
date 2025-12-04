@@ -16,6 +16,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         logger.info("🚀 Application finished launching")
+        
+        // Check user preference for showing in Dock (default to true for keyboard input support)
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: "showInDock") == nil {
+            // First launch - default to showing in Dock
+            defaults.set(true, forKey: "showInDock")
+        }
+        let showInDock = defaults.bool(forKey: "showInDock")
+        
+        // Set activation policy based on user preference
+        // .regular = shows in Dock, enables proper keyboard input
+        // .accessory = menu bar only, but keyboard input may not work in dialogs
+        NSApp.setActivationPolicy(showInDock ? .regular : .accessory)
+        
+        logger.info("Activation policy: \(showInDock ? "regular (show in Dock)" : "accessory (menu bar only)")")
 
         // Start backend immediately on app launch
         // This ensures backend is ready before any UI appears

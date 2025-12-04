@@ -9,6 +9,7 @@ struct GeneralSettingsView: View {
     @Binding var windowSize: String
     @Binding var apiHost: String
     @Binding var apiPort: Int
+    @AppStorage("showInDock") private var showInDock = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -20,6 +21,22 @@ struct GeneralSettingsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Toggle("Launch at login", isOn: $launchAtLogin)
                     Toggle("Start minimized", isOn: $startMinimized)
+                }
+                .padding(.vertical, 8)
+            }
+            
+            // Menu Bar Behavior
+            GroupBox(label: Text("Menu Bar")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle("Show app icon in Dock", isOn: $showInDock)
+                        .onChange(of: showInDock) { newValue in
+                            // Update activation policy immediately
+                            NSApp.setActivationPolicy(newValue ? .regular : .accessory)
+                        }
+                    
+                    Text("Showing in Dock fixes keyboard input issues in dialogs")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 8)
             }

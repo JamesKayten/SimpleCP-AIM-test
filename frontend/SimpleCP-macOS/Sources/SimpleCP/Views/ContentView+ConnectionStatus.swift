@@ -42,8 +42,10 @@ extension ContentView {
     // MARK: - Connection Status Properties
 
     var connectionStatusColor: Color {
-        if backendService.isRunning {
+        if backendService.isReady {
             return .green
+        } else if backendService.isRunning {
+            return .yellow
         } else if backendService.isMonitoring {
             return .orange
         } else {
@@ -52,8 +54,10 @@ extension ContentView {
     }
 
     var connectionStatusText: String {
-        if backendService.isRunning {
+        if backendService.isReady {
             return "Connected"
+        } else if backendService.isRunning {
+            return "Starting..."
         } else if backendService.isMonitoring {
             return "Connecting..."
         } else {
@@ -62,8 +66,10 @@ extension ContentView {
     }
 
     var connectionStatusBackgroundColor: Color {
-        if backendService.isRunning {
+        if backendService.isReady {
             return Color.green.opacity(0.1)
+        } else if backendService.isRunning {
+            return Color.yellow.opacity(0.1)
         } else if backendService.isMonitoring {
             return Color.orange.opacity(0.1)
         } else {
@@ -72,8 +78,10 @@ extension ContentView {
     }
 
     var connectionTooltipText: String {
-        if backendService.isRunning {
-            return "Backend is connected and running"
+        if backendService.isReady {
+            return "Backend is connected and ready"
+        } else if backendService.isRunning {
+            return "Backend is starting up..."
         } else if backendService.isMonitoring {
             if backendService.restartCount > 0 {
                 return "Reconnecting... (attempt \(backendService.restartCount))"
@@ -85,11 +93,11 @@ extension ContentView {
     }
 
     var connectionPulseScale: CGFloat {
-        backendService.isMonitoring && !backendService.isRunning ? 1.5 : 1.0
+        (backendService.isRunning && !backendService.isReady) || (backendService.isMonitoring && !backendService.isRunning) ? 1.5 : 1.0
     }
 
     var connectionAnimation: Animation? {
-        if backendService.isMonitoring && !backendService.isRunning {
+        if (backendService.isRunning && !backendService.isReady) || (backendService.isMonitoring && !backendService.isRunning) {
             return .easeInOut(duration: 1.0).repeatForever(autoreverses: true)
         }
         return .easeInOut(duration: 0.3)

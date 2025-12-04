@@ -64,7 +64,7 @@ struct CreateFolderSheet: View {
                 Button("Create Folder") {
                     print("Creating folder with name: '\(folderName)'")
                     if !folderName.isEmpty {
-                        clipboardManager.createFolder(name: folderName)
+                        _ = clipboardManager.createFolder(name: folderName)
                         print("✅ Folder created: \(folderName)")
                         isPresented = false
                     }

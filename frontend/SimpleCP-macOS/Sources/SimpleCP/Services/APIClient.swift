@@ -14,6 +14,7 @@ enum APIError: Error, LocalizedError {
     case invalidResponse
     case httpError(statusCode: Int, message: String)
     case decodingError(Error)
+    case invalidRequest(String)
 
     var errorDescription: String? {
         switch self {
@@ -27,6 +28,8 @@ enum APIError: Error, LocalizedError {
             return "HTTP \(statusCode): \(message)"
         case .decodingError(let error):
             return "Failed to decode response: \(error.localizedDescription)"
+        case .invalidRequest(let message):
+            return "Invalid request: \(message)"
         }
     }
 }
@@ -122,7 +125,7 @@ class APIClient {
                 return statusCode >= 500 || statusCode == 408 || statusCode == 429
             case .invalidResponse:
                 return true // Might be temporary server issue
-            case .invalidURL, .decodingError:
+            case .invalidURL, .decodingError, .invalidRequest:
                 return false // Don't retry client-side errors
             }
         case let urlError as URLError:

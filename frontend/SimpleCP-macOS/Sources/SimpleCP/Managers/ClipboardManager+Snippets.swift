@@ -53,7 +53,6 @@ extension ClipboardManager {
 
     func updateSnippet(_ snippet: Snippet) {
         if let index = snippets.firstIndex(where: { $0.id == snippet.id }) {
-            let oldSnippet = snippets[index]
             snippets[index] = snippet
             saveSnippets()
             logger.info("✏️ Updated snippet: \(snippet.name)")
@@ -82,14 +81,15 @@ extension ClipboardManager {
                     await MainActor.run {
                         logger.info("✏️ Snippet update synced with backend: \(snippet.name)")
                     }
+                } catch APIError.httpError(let statusCode, _) where statusCode == 404 {
+                    // 404 means snippet wasn't on backend - that's okay, keep local changes
+                    await MainActor.run {
+                        logger.info("ℹ️ Snippet was not on backend (local-only snippet)")
+                    }
                 } catch {
                     await MainActor.run {
-                        logger.error("❌ Failed to sync snippet update with backend: \(error.localizedDescription)")
-                        // Revert on failure
-                        snippets[index] = oldSnippet
-                        saveSnippets()
-                        lastError = .apiError("Failed to sync snippet update: \(error.localizedDescription)")
-                        showError = true
+                        logger.warning("⚠️ Failed to sync snippet update with backend: \(error.localizedDescription)")
+                        // Don't revert or show error - local update is what user wanted
                     }
                 }
             }
@@ -122,11 +122,15 @@ extension ClipboardManager {
                 await MainActor.run {
                     logger.info("🗑️ Snippet deletion synced with backend: \(snippet.name)")
                 }
+            } catch APIError.httpError(let statusCode, _) where statusCode == 404 {
+                // 404 means snippet wasn't on backend - that's fine, it's deleted on frontend
+                await MainActor.run {
+                    logger.info("ℹ️ Snippet was not on backend (already deleted or never synced)")
+                }
             } catch {
                 await MainActor.run {
-                    logger.error("❌ Failed to sync snippet deletion with backend: \(error.localizedDescription)")
-                    lastError = .apiError("Failed to sync snippet deletion: \(error.localizedDescription)")
-                    showError = true
+                    logger.warning("⚠️ Failed to sync snippet deletion with backend: \(error.localizedDescription)")
+                    // Don't show error to user - snippet is already deleted locally which is what matters
                 }
             }
         }

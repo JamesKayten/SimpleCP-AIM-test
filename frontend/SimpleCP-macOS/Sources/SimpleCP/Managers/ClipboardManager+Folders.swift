@@ -10,7 +10,7 @@ import Foundation
 extension ClipboardManager {
     // MARK: - Folder Management
 
-    func createFolder(name: String, icon: String = "📁") {
+    func createFolder(name: String, icon: String = "📁") -> UUID {
         // DEBUG: Log all folder creation with stack trace
         logger.warning("🔴 CREATE FOLDER CALLED: '\(name)'")
         print("🔴🔴🔴 CREATE FOLDER CALLED: '\(name)'")
@@ -44,6 +44,9 @@ extension ClipboardManager {
                 }
             }
         }
+        
+        // Return the ID of the newly created folder
+        return folder.id
     }
 
     func updateFolder(_ folder: SnippetFolder) {
@@ -64,16 +67,21 @@ extension ClipboardManager {
                         await MainActor.run {
                             logger.info("✏️ Folder renamed: '\(oldName)' → '\(newName)' (synced with backend)")
                         }
-                        // Note: No need to re-sync with backend here as local state is already updated
-                        // Re-syncing causes unnecessary state changes and view recreations
+                    } catch APIError.httpError(let statusCode, _) where statusCode == 404 {
+                        // 404 means old folder wasn't on backend - that's okay, local rename succeeded
+                        await MainActor.run {
+                            logger.info("ℹ️ Old folder was not on backend (local-only folder)")
+                        }
+                    } catch APIError.httpError(let statusCode, let message) where statusCode == 409 {
+                        // 409 conflict means new name already exists on backend
+                        await MainActor.run {
+                            logger.warning("⚠️ Folder name '\(newName)' already exists on backend: \(message)")
+                            // Keep local change - user intended this rename
+                        }
                     } catch {
                         await MainActor.run {
-                            logger.error("❌ Failed to sync folder rename with backend: \(error.localizedDescription)")
-                            lastError = .apiError("Failed to sync folder rename: \(error.localizedDescription)")
-                            showError = true
-                            // Revert local change on API failure
-                            folders[index] = oldFolder
-                            saveFolders()
+                            logger.warning("⚠️ Failed to sync folder rename with backend: \(error.localizedDescription)")
+                            // Don't revert or show error - local rename is what user wanted
                         }
                     }
                 }
